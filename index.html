@@ -502,7 +502,7 @@
     <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
     <div id="loc-status-box">📍 Fetching your location...</div>
     <div id="loc-map"></div>
-    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span></div>
+    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span><div id="loc-address-preview" style="margin-top:6px;font-size:12.5px;color:#555;font-weight:600"></div></div>
     <div class="loc-btn-row">
       <button type="button" id="loc-locate-btn" onclick="locLocateMe()">🎯 Use my location</button>
       <button type="button" id="loc-confirm-btn" onclick="confirmLocationPick()">✅ Confirm this spot</button>
@@ -535,7 +535,7 @@ let deliveryLat = null, deliveryLng = null;
 let locMap = null, locMarker = null, locRadiusCircle = null;
 // TildaBite kitchen location — delivery radius is measured from here.
 const STORE_LAT = 21.544869, STORE_LNG = 81.801203;
-const MAX_DELIVERY_RADIUS_KM = 2.5;
+const MAX_DELIVERY_RADIUS_KM = 7;
 const locDefaultLat = STORE_LAT, locDefaultLng = STORE_LNG;
 
 // Haversine distance in km between two lat/lng points
@@ -584,12 +584,49 @@ function closeLocationPicker(){
 
 function updateLocCoords(lat, lng){
   document.getElementById('loc-coords-text').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+  scheduleReverseGeocode(lat, lng);
 }
 
 function setLocStatus(text, confirmed){
   const el = document.getElementById('loc-status-box');
   el.textContent = text;
   el.classList.toggle('confirmed', !!confirmed);
+}
+
+// ─── Reverse geocoding: auto-fill address / nearest landmark ──
+let geocodeTimer = null;
+let lastGeocodedAddress = '';
+
+function scheduleReverseGeocode(lat, lng){
+  clearTimeout(geocodeTimer);
+  document.getElementById('loc-address-preview').textContent = '🔎 Finding nearest address…';
+  geocodeTimer = setTimeout(() => reverseGeocode(lat, lng), 600); // debounce while dragging
+}
+
+async function reverseGeocode(lat, lng){
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    const data = await res.json();
+    if(!data || data.error){ document.getElementById('loc-address-preview').textContent = ''; return; }
+    const a = data.address || {};
+    // Pick the most useful "nearest landmark" style pieces
+    const landmark = a.amenity || a.shop || a.building || a.suburb || a.neighbourhood || '';
+    const road = a.road || a.pedestrian || '';
+    const area = a.suburb || a.neighbourhood || a.village || a.town || a.city_district || '';
+    const city = a.city || a.town || a.state_district || '';
+    const pin = a.postcode || '';
+    const parts = [landmark, road, area, city, pin].filter((v,i,arr)=>v && arr.indexOf(v)===i);
+    const shortAddress = parts.join(', ') || data.display_name;
+    lastGeocodedAddress = shortAddress;
+    document.getElementById('loc-address-preview').textContent = '📌 ' + shortAddress;
+    // Auto-fill the checkout delivery address field
+    document.getElementById('delivery-address').value = shortAddress;
+  } catch(e){
+    console.error('Reverse geocode failed:', e);
+    document.getElementById('loc-address-preview').textContent = '';
+  }
 }
 
 function locLocateMe(){
@@ -601,7 +638,7 @@ function locLocateMe(){
       locMap.setView([latitude, longitude], 15);
       locMarker.setLatLng([latitude, longitude]);
       updateLocCoords(latitude, longitude);
-      setLocStatus('✅ Location found — drag pin to fine-tune if needed');
+      setLocStatus('✅ Location found — address auto-filled, drag pin to fine-tune if needed');
     },
     function(){ setLocStatus('⚠️ Location access denied — please drag pin manually'); },
     { enableHighAccuracy: true, timeout: 10000 }
@@ -621,7 +658,8 @@ function confirmLocationPick(){
   const statusRow = document.getElementById('pin-loc-status');
   statusRow.style.display = 'flex';
   document.getElementById('pin-loc-status-text').textContent = `Location pinned · ${dist.toFixed(1)} km from kitchen`;
-  showToast('📍 Delivery location pinned!');
+  if(lastGeocodedAddress) document.getElementById('delivery-address').value = lastGeocodedAddress;
+  showToast('📍 Delivery location & address pinned!');
   closeLocationPicker();
 }
 
