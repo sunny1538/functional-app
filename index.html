@@ -550,9 +550,9 @@ function distanceKm(lat1, lng1, lat2, lng2){
 function openLocationPicker(){
   document.getElementById('loc-modal-overlay').classList.add('open');
   if(!locMap){
-    locMap = L.map('loc-map').setView([locDefaultLat, locDefaultLng], 13);
+    locMap = L.map('loc-map', { attributionControl: false }).setView([locDefaultLat, locDefaultLng], 13);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Esri, Maxar, Earthstar Geographics', maxZoom: 19
+      maxZoom: 19
     }).addTo(locMap);
     locRadiusCircle = L.circle([STORE_LAT, STORE_LNG], {
       radius: MAX_DELIVERY_RADIUS_KM * 1000, color: '#ff5722', weight: 2, fillColor: '#ff5722', fillOpacity: 0.06
