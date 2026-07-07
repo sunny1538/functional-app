@@ -469,7 +469,7 @@
     <div class="checkout-section">
       <h3><i class="ti ti-map-pin"></i>Delivery address</h3>
       <textarea class="address-input" id="delivery-address" placeholder="House/Flat no., Street, Area, City…"></textarea>
-      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-current-location"></i> Pin exact location on map</button>
+      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-current-location"></i> Pin exact location on map (required · 7km delivery zone)</button>
       <div class="pin-loc-status" id="pin-loc-status" style="display:none"><i class="ti ti-map-pin-check"></i><span id="pin-loc-status-text"></span></div>
     </div>
     <div class="checkout-section" id="checkout-items-section">
@@ -499,7 +499,7 @@
 <div class="loc-modal-overlay" id="loc-modal-overlay">
   <div class="loc-modal">
     <h3>📍 Set delivery location</h3>
-    <p class="loc-sub">Drag the pin or tap the map to set your exact spot</p>
+    <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
     <div id="loc-status-box">📍 Fetching your location...</div>
     <div id="loc-map"></div>
     <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span></div>
@@ -532,16 +532,34 @@
 <script>
 // ─── DELIVERY LOCATION PICKER (Leaflet) ───────────────────────
 let deliveryLat = null, deliveryLng = null;
-let locMap = null, locMarker = null;
-const locDefaultLat = 22.9676, locDefaultLng = 76.0534;
+let locMap = null, locMarker = null, locRadiusCircle = null;
+// TildaBite kitchen location — delivery radius is measured from here.
+const STORE_LAT = 21.544869, STORE_LNG = 81.801203;
+const MAX_DELIVERY_RADIUS_KM = 7;
+const locDefaultLat = STORE_LAT, locDefaultLng = STORE_LNG;
+
+// Haversine distance in km between two lat/lng points
+function distanceKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 
 function openLocationPicker(){
   document.getElementById('loc-modal-overlay').classList.add('open');
   if(!locMap){
-    locMap = L.map('loc-map').setView([locDefaultLat, locDefaultLng], 14);
+    locMap = L.map('loc-map').setView([locDefaultLat, locDefaultLng], 13);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Esri, Maxar, Earthstar Geographics', maxZoom: 19
     }).addTo(locMap);
+    locRadiusCircle = L.circle([STORE_LAT, STORE_LNG], {
+      radius: MAX_DELIVERY_RADIUS_KM * 1000, color: '#ff5722', weight: 2, fillColor: '#ff5722', fillOpacity: 0.06
+    }).addTo(locMap);
+    L.marker([STORE_LAT, STORE_LNG], {
+      icon: L.divIcon({ html: '🏠', className: '', iconSize: [24,24] })
+    }).addTo(locMap).bindTooltip('TildaBite kitchen', { permanent: false });
     locMarker = L.marker([locDefaultLat, locDefaultLng], { draggable: true }).addTo(locMap);
     locMarker.on('dragend', function(){
       const p = locMarker.getLatLng();
@@ -580,7 +598,7 @@ function locLocateMe(){
   navigator.geolocation.getCurrentPosition(
     function(pos){
       const { latitude, longitude } = pos.coords;
-      locMap.setView([latitude, longitude], 17);
+      locMap.setView([latitude, longitude], 15);
       locMarker.setLatLng([latitude, longitude]);
       updateLocCoords(latitude, longitude);
       setLocStatus('✅ Location found — drag pin to fine-tune if needed');
@@ -592,11 +610,17 @@ function locLocateMe(){
 
 function confirmLocationPick(){
   const p = locMarker.getLatLng();
+  const dist = distanceKm(STORE_LAT, STORE_LNG, p.lat, p.lng);
+  if(dist > MAX_DELIVERY_RADIUS_KM){
+    setLocStatus(`🚫 Sorry, this spot is ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km of our kitchen`, false);
+    showToast(`❌ Out of delivery range (${dist.toFixed(1)} km away, max ${MAX_DELIVERY_RADIUS_KM} km)`);
+    return;
+  }
   deliveryLat = p.lat; deliveryLng = p.lng;
-  setLocStatus(`✅ Delivery location confirmed: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`, true);
+  setLocStatus(`✅ Delivery location confirmed: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)} (${dist.toFixed(1)} km away)`, true);
   const statusRow = document.getElementById('pin-loc-status');
   statusRow.style.display = 'flex';
-  document.getElementById('pin-loc-status-text').textContent = `Location pinned (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})`;
+  document.getElementById('pin-loc-status-text').textContent = `Location pinned · ${dist.toFixed(1)} km from kitchen`;
   showToast('📍 Delivery location pinned!');
   closeLocationPicker();
 }
@@ -995,6 +1019,7 @@ async function placeOrder(){
   if(!requireAuth('placeOrder')) return;
   const address = document.getElementById('delivery-address').value.trim();
   if(!address){ showToast('Please enter a delivery address'); return; }
+  if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please pin your exact location on the map — we only deliver within 7 km'); openLocationPicker(); return; }
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   if(!keys.length){ showToast('Your cart is empty'); return; }
   const otp = String(Math.floor(1000 + Math.random() * 9000));
