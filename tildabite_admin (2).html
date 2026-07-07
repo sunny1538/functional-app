@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TildaBite Admin Portal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f5;--surface:#fff;--card:#fffdf9;--border:#ede9e0;--border2:#d8d2c4;
+  --text:#1a1208;--text2:#6b5e45;--text3:#b0a48a;
+  --accent:#f07c1a;--accent2:#ff9c3a;--abg:rgba(240,124,26,0.08);--aborder:rgba(240,124,26,0.25);
+  --green:#16a34a;--gbg:rgba(22,163,74,0.09);--gborder:rgba(22,163,74,0.3);
+  --blue:#2563eb;--bbg:rgba(37,99,235,0.09);--bborder:rgba(37,99,235,0.3);
+  --amber:#b45309;--ambg:rgba(180,83,9,0.09);--amborder:rgba(180,83,9,0.3);
+  --red:#dc2626;--rbg:rgba(220,38,38,0.09);--rborder:rgba(220,38,38,0.3);
+  --radius:9px;
+}
+body.dark{
+  --bg:#0f0f0f;--surface:#1a1a1a;--card:#222;--border:#2e2e2e;--border2:#3a3a3a;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --accent:#ff6b35;--accent2:#ff8c55;--abg:rgba(255,107,53,0.12);--aborder:rgba(255,107,53,0.35);
+  --green:#22c55e;--gbg:rgba(34,197,94,0.1);--gborder:rgba(34,197,94,0.3);
+  --blue:#3b82f6;--bbg:rgba(59,130,246,0.1);--bborder:rgba(59,130,246,0.3);
+  --amber:#f59e0b;--ambg:rgba(245,158,11,0.1);--amborder:rgba(245,158,11,0.3);
+  --red:#ef4444;--rbg:rgba(239,68,68,0.1);--rborder:rgba(239,68,68,0.3);
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:230px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;padding:0}
+.sidebar-logo{padding:18px 20px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo img{height:38px;width:38px;object-fit:contain;border-radius:8px}
+.sidebar-logo-text .brand{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-0.3px}
+.sidebar-logo-text .sub{font-size:11px;color:var(--text3);font-weight:500}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item i{font-size:17px;width:20px}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--abg);color:var(--accent);border:1px solid var(--aborder)}
+.nav-item .badge{margin-left:auto;background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700}
+.sidebar-footer{padding:14px 10px;border-top:1.5px solid var(--border)}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--surface);border-bottom:1.5px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:800}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tb-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tb-btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.view{display:none}
+.view.active{display:block}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(180,120,30,0.06)}
+.stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:800;margin-bottom:2px}
+.stat-sub{font-size:11px;color:var(--text3)}
+.stat-card.s-orange .stat-val{color:var(--accent)}
+.stat-card.s-green .stat-val{color:var(--green)}
+.stat-card.s-blue .stat-val{color:var(--blue)}
+.stat-card.s-amber .stat-val{color:var(--amber)}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-head h2{font-size:14px;font-weight:700}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.15s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--abg)}
+
+.orders-table{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;overflow:hidden}
+.table-head{display:grid;grid-template-columns:100px 1fr 90px 100px 110px 150px;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.table-row{display:grid;grid-template-columns:100px 1fr 90px 100px 110px 150px;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.15s}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:var(--card)}
+.table-cell{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+.order-id-cell{font-weight:700;color:var(--accent);font-size:12px}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);border-radius:26px;transition:.2s}
+.switch .slider::before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked + .slider{background:var(--green)}
+.switch input:checked + .slider::before{transform:translateX(20px)}
+.s-pending{background:var(--ambg);color:var(--amber);border:1px solid var(--amborder)}
+.s-otw{background:var(--bbg);color:var(--blue);border:1px solid var(--bborder)}
+.s-delivered{background:var(--gbg);color:var(--green);border:1px solid var(--gborder)}
+.s-cancelled{background:var(--rbg);color:var(--red);border:1px solid var(--rborder)}
+.assign-btn{background:var(--bbg);color:var(--blue);border:1px solid var(--bborder);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.15s}
+.assign-btn:hover{background:var(--blue);color:#fff}
+.assigned-pill{background:var(--gbg);color:var(--green);border:1px solid var(--gborder);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal-bg.hidden{display:none}
+.modal{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal h3{font-size:15px;font-weight:800;margin-bottom:4px}
+.modal p{font-size:12px;color:var(--text2);margin-bottom:18px}
+.modal-field{margin-bottom:14px}
+.modal-field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.modal-field select,.modal-field input{width:100%;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius);font-size:13px;outline:none}
+.modal-field select:focus,.modal-field input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:13px}
+.btn-confirm{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:700}
+
+.riders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.rider-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(180,120,30,0.06)}
+.rider-avatar{width:44px;height:44px;border-radius:50%;background:var(--bbg);border:2px solid var(--bborder);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--blue);margin-bottom:10px}
+.rider-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.rider-phone{font-size:12px;color:var(--text2);margin-bottom:10px}
+.rider-stats{display:flex;gap:10px;margin-bottom:12px}
+.r-stat{flex:1;text-align:center;background:var(--card);border-radius:8px;padding:6px}
+.r-stat-val{font-size:16px;font-weight:800;color:var(--accent)}
+.r-stat-label{font-size:10px;color:var(--text3)}
+.rider-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.r-available{background:var(--gbg);color:var(--green);border:1px solid var(--gborder)}
+.r-busy{background:var(--ambg);color:var(--amber);border:1px solid var(--amborder)}
+.r-offline{background:var(--card);color:var(--text3);border:1px solid var(--border)}
+
+.notif-form{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:20px;max-width:520px}
+.notif-form h3{font-size:14px;font-weight:700;margin-bottom:16px}
+.nf-field{margin-bottom:14px}
+.nf-field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.nf-field select,.nf-field input,.nf-field textarea{width:100%;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:9px 12px;border-radius:var(--radius);font-size:13px;outline:none;font-family:inherit}
+.nf-field textarea{min-height:80px;resize:vertical}
+.nf-field select:focus,.nf-field input:focus,.nf-field textarea:focus{border-color:var(--accent)}
+.send-btn{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.notif-log{margin-top:20px}
+.notif-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.notif-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ni-order{background:var(--bbg);color:var(--blue)}
+.ni-promo{background:var(--abg);color:var(--accent)}
+.ni-alert{background:var(--ambg);color:var(--amber)}
+.notif-content h4{font-size:13px;font-weight:600;margin-bottom:2px}
+.notif-content p{font-size:12px;color:var(--text2)}
+.notif-meta{margin-left:auto;font-size:11px;color:var(--text3);white-space:nowrap}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1.5px solid var(--accent);color:var(--text);padding:10px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(12px);transition:all 0.25s;display:flex;align-items:center;gap:8px;pointer-events:none;box-shadow:0 4px 20px rgba(240,124,26,0.15)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast i{color:var(--accent)}
+</style>
+
+<div class="toast" id="toast"><i class="ti ti-circle-check"></i><span id="tmsg"></span></div>
+
+<!-- ADMIN LOGIN SCREEN -->
+<div id="admin-login-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff8f0,#fff3e5)">
+  <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(180,120,30,0.12)">
+    <div style="text-align:center;margin-bottom:28px">
+      <img src="logo.png" alt="TildaBite" style="height:64px;width:64px;border-radius:14px;margin-bottom:10px">
+      <div style="font-size:24px;font-weight:900;color:var(--accent);letter-spacing:-0.5px">TildaBite</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:500">Admin Portal · Restricted Access 🔒</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">Admin ID</label>
+      <input type="email" id="admin-id-input" placeholder="admin@tildabite.com" style="width:100%;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">Password</label>
+      <input type="password" id="admin-pass-input" placeholder="••••••••" style="width:100%;background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <div id="admin-login-error" style="display:none;background:var(--rbg);border:1px solid var(--rborder);color:var(--red);padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:14px;text-align:center"></div>
+    <button onclick="adminLogin()" style="width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(240,124,26,0.25)">Sign in to Admin Panel</button>
+    <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--text3)">Default: admin@tildabite.com / Admin@1234</div>
+  </div>
+</div>
+
+<div class="shell" id="admin-shell" style="display:none">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="TildaBite">
+      <div class="sidebar-logo-text">
+        <div class="brand">TildaBite</div>
+        <div class="sub">Admin Panel</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" onclick="showView('overview',this)"><i class="ti ti-layout-dashboard"></i>Overview</button>
+      <button class="nav-item" onclick="showView('orders',this)"><i class="ti ti-package"></i>Orders <span class="badge" id="pending-badge">0</span></button>
+      <button class="nav-item" onclick="showView('analytics',this)"><i class="ti ti-chart-bar"></i>Analytics</button>
+      <button class="nav-item" onclick="showView('customers',this)"><i class="ti ti-users"></i>Customers</button>
+      <button class="nav-item" onclick="showView('riders',this)"><i class="ti ti-motorbike"></i>Riders</button>
+      <button class="nav-item" onclick="showView('notifications',this)"><i class="ti ti-bell"></i>Notifications</button>
+      <button class="nav-item" onclick="showView('menu-mgmt',this)"><i class="ti ti-clipboard-list"></i>Menu</button>
+      <button class="nav-item" onclick="showView('settings',this)"><i class="ti ti-settings"></i>Settings</button>
+    </div>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="toggleTheme()"><i class="ti ti-moon" id="theme-icon"></i>Toggle theme</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Overview</div>
+      <div class="topbar-right">
+        <button id="store-status-pill" onclick="quickToggleStore()" class="tb-btn" style="font-weight:700"><i class="ti ti-circle-filled" style="font-size:10px"></i> <span id="store-status-text">Loading...</span></button>
+        <button class="tb-btn" onclick="adminRefreshOrders()"><i class="ti ti-refresh" style="font-size:14px"></i> Refresh</button>
+        <button class="tb-btn accent"><i class="ti ti-user-circle" style="font-size:14px"></i> Admin</button>
+        <button class="tb-btn" onclick="adminSignOut()" style="border-color:var(--red);color:var(--red)"><i class="ti ti-logout" style="font-size:14px"></i> Sign out</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="view active" id="view-overview">
+        <div class="stat-grid">
+          <div class="stat-card s-orange"><div class="stat-label">Total orders today</div><div class="stat-val" id="ov-total">0</div><div class="stat-sub" id="ov-total-sub">No orders yet</div></div>
+          <div class="stat-card s-green"><div class="stat-label">Revenue today</div><div class="stat-val" id="ov-revenue">₹0</div><div class="stat-sub">—</div></div>
+          <div class="stat-card s-blue"><div class="stat-label">Active riders</div><div class="stat-val" id="ov-riders">0</div><div class="stat-sub">—</div></div>
+          <div class="stat-card s-amber"><div class="stat-label">Pending orders</div><div class="stat-val" id="ov-pending">0</div><div class="stat-sub">Need rider assignment</div></div>
+        </div>
+        <div class="section-head"><h2>Recent orders</h2><button class="filter-btn" onclick="showView('orders',document.querySelectorAll('.nav-item')[1])">View all</button></div>
+        <div class="orders-table">
+          <div class="table-head"><div>Order ID</div><div>Customer</div><div>Amount</div><div>Status</div><div>Rider</div><div>Action</div></div>
+          <div id="recent-orders-body"></div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="view" id="view-orders">
+        <div class="filter-row" id="order-filters">
+          <button class="filter-btn active" onclick="filterOrders('all',this)">All orders</button>
+          <button class="filter-btn" onclick="filterOrders('pending',this)">Pending</button>
+          <button class="filter-btn" onclick="filterOrders('preparing',this)">Preparing</button>
+          <button class="filter-btn" onclick="filterOrders('otw',this)">Out for delivery</button>
+          <button class="filter-btn" onclick="filterOrders('delivered',this)">Delivered</button>
+          <button class="filter-btn" onclick="filterOrders('cancelled',this)">Cancelled</button>
+        </div>
+        <div class="filter-row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:center">
+          <input type="text" id="order-search" placeholder="Search order ID, name or phone..." oninput="renderAllOrders()" style="flex:1;min-width:200px;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+          <select id="order-date-filter" onchange="onDateFilterChange()" style="padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+            <option value="custom">Custom range</option>
+          </select>
+          <input type="date" id="order-date-from" style="display:none;padding:7px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px" oninput="renderAllOrders()">
+          <input type="date" id="order-date-to" style="display:none;padding:7px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px" oninput="renderAllOrders()">
+          <select id="order-rider-filter" onchange="renderAllOrders()" style="padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+            <option value="all">All riders</option>
+          </select>
+          <button class="tb-btn" onclick="openExportModal()"><i class="ti ti-download" style="font-size:14px"></i> Export CSV</button>
+        </div>
+        <div class="orders-table" style="margin-top:12px">
+          <div class="table-head"><div>Order ID</div><div>Customer</div><div>Amount</div><div>Status</div><div>Rider</div><div>Action</div></div>
+          <div id="all-orders-body"></div>
+        </div>
+        <div class="modal-bg hidden" id="assign-modal">
+          <div class="modal">
+            <h3>Assign rider</h3>
+            <p id="modal-order-label">Assigning for TB1001</p>
+            <div class="modal-field"><label>Select rider</label>
+              <select id="rider-select"><option value="">Choose a rider...</option></select>
+            </div>
+            <div class="modal-actions">
+              <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+              <button class="btn-confirm" onclick="confirmAssign()">Assign & generate OTP</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER DETAILS / PRINT MODAL -->
+        <div class="modal-bg hidden" id="order-details-modal">
+          <div class="modal" style="max-width:420px">
+            <h3>Order details</h3>
+            <div id="order-details-body" style="font-size:13px;color:var(--text);margin:14px 0;max-height:60vh;overflow-y:auto"></div>
+            <div class="modal-actions">
+              <button class="btn-cancel" onclick="closeOrderDetails()">Close</button>
+              <button class="btn-confirm" onclick="printOrderSlip()"><i class="ti ti-printer" style="font-size:13px"></i> Print slip</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXPORT CSV MODAL -->
+        <div class="modal-bg hidden" id="export-modal">
+          <div class="modal">
+            <h3>Export orders as CSV</h3>
+            <div class="modal-field"><label>From date</label>
+              <input type="date" id="export-from" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+            </div>
+            <div class="modal-field"><label>To date</label>
+              <input type="date" id="export-to" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+            </div>
+            <div class="modal-actions">
+              <button class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+              <button class="btn-confirm" onclick="exportOrdersCSV()"><i class="ti ti-download" style="font-size:13px"></i> Download CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIDERS -->
+      <div class="view" id="view-riders">
+        <div class="riders-grid" id="riders-grid"></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="view" id="view-analytics">
+        <div class="filter-row" id="analytics-range">
+          <button class="filter-btn active" onclick="setAnalyticsRange('24h',this)">24 Hours</button>
+          <button class="filter-btn" onclick="setAnalyticsRange('week',this)">Week</button>
+          <button class="filter-btn" onclick="setAnalyticsRange('month',this)">Month</button>
+          <button class="filter-btn" onclick="setAnalyticsRange('year',this)">Year</button>
+        </div>
+        <div class="stat-grid" style="margin-top:14px">
+          <div class="stat-card s-orange"><div class="stat-label">Orders</div><div class="stat-val" id="an-orders">0</div></div>
+          <div class="stat-card s-green"><div class="stat-label">Revenue</div><div class="stat-val" id="an-revenue">₹0</div></div>
+          <div class="stat-card s-blue"><div class="stat-label">Avg order value</div><div class="stat-val" id="an-aov">₹0</div></div>
+        </div>
+        <div class="section-head" style="margin-top:20px"><h2>Orders trend</h2></div>
+        <div id="an-trend-chart" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:180px"></div>
+        <div class="section-head" style="margin-top:20px"><h2>Peak order hours</h2></div>
+        <div id="an-hours-chart" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:140px"></div>
+        <div class="section-head" style="margin-top:20px"><h2>Best-selling items</h2></div>
+        <div id="an-top-items" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px"></div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div class="view" id="view-customers">
+        <div class="filter-row" style="margin-bottom:12px">
+          <input type="text" id="customer-search" placeholder="Search by name, email or phone..." oninput="renderCustomers()" style="flex:1;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+        </div>
+        <div class="orders-table">
+          <div class="table-head" style="grid-template-columns:1fr 1fr 90px 90px 100px"><div>Customer</div><div>Contact</div><div>Orders</div><div>Spent</div><div>Tag</div></div>
+          <div id="customers-body" style="display:grid;grid-template-columns:1fr"></div>
+        </div>
+        <div class="modal-bg hidden" id="customer-history-modal">
+          <div class="modal" style="max-width:460px">
+            <h3>Order history</h3>
+            <div id="customer-history-body" style="font-size:13px;margin:14px 0;max-height:60vh;overflow-y:auto"></div>
+            <div class="modal-actions">
+              <button class="btn-cancel" onclick="closeCustomerHistory()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="view" id="view-settings">
+        <div class="section-head"><h2>Store status</h2></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:520px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <div style="font-weight:700;font-size:14px">Restaurant Open</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:2px">Turn off to stop new orders instantly</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settings-is-open" onchange="onStoreToggleChange()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="modal-field"><label>Opening time</label>
+            <input type="time" id="settings-opening-time" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px">
+          </div>
+          <div class="modal-field"><label>Closing time</label>
+            <input type="time" id="settings-closing-time" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px">
+          </div>
+          <div class="modal-field"><label>Restaurant phone (for "Call us" button)</label>
+            <input type="text" id="settings-phone" placeholder="98765 43210" style="width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin:14px 0">
+            <input type="checkbox" id="settings-auto-reopen" style="width:16px;height:16px">
+            <label for="settings-auto-reopen" style="font-size:13px">Auto re-open once opening time is reached</label>
+          </div>
+          <button class="btn-confirm" style="width:100%;justify-content:center" onclick="saveStoreSettings()"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save settings</button>
+        </div>
+      </div>
+
+      <!-- STORE OPEN/CLOSE CONFIRMATION -->
+      <div class="modal-bg hidden" id="store-confirm-modal">
+        <div class="modal" style="max-width:380px;text-align:center">
+          <div id="store-confirm-icon" style="font-size:40px;margin-bottom:8px">🔔</div>
+          <h3 id="store-confirm-title" style="text-align:center;font-size:16px">Close the restaurant?</h3>
+          <p id="store-confirm-body" style="text-align:center">Customers won't be able to place new orders. They'll see a "We'll be available soon" screen until you reopen.</p>
+          <div class="modal-actions" style="justify-content:center">
+            <button class="btn-cancel" onclick="cancelStoreToggle()">Cancel</button>
+            <button class="btn-confirm" id="store-confirm-btn" onclick="confirmStoreToggle()">Yes, close now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="view" id="view-notifications">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+          <div class="notif-form">
+            <h3><i class="ti ti-send" style="color:var(--accent);margin-right:6px"></i>Send notification</h3>
+            <div class="nf-field"><label>Target audience</label>
+              <select id="notif-target">
+                <option>All customers</option><option>Specific order customer</option>
+                <option>All riders</option><option>Customers with pending orders</option>
+              </select>
+            </div>
+            <div class="nf-field"><label>Notification type</label>
+              <select id="notif-type">
+                <option>Order update</option><option>Promotional offer</option>
+                <option>OTP delivery</option><option>System alert</option>
+              </select>
+            </div>
+            <div class="nf-field"><label>Title</label><input type="text" id="notif-title" placeholder="Your order is on the way!"></div>
+            <div class="nf-field"><label>Message</label><textarea id="notif-msg" placeholder="Enter notification message..."></textarea></div>
+            <button class="send-btn" onclick="sendNotification()"><i class="ti ti-send" style="font-size:14px"></i>Send notification</button>
+          </div>
+          <div>
+            <div class="section-head" style="margin-bottom:12px"><h2>Notification log</h2></div>
+            <div class="notif-log" id="notif-log"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENU MGMT -->
+      <div class="view" id="view-menu-mgmt">
+        <div class="stat-grid" style="margin-bottom:16px">
+          <div class="stat-card s-orange"><div class="stat-label">Total items</div><div class="stat-val" id="mm-total">0</div><div class="stat-sub">In menu</div></div>
+          <div class="stat-card s-green"><div class="stat-label">In stock</div><div class="stat-val" id="mm-instock">0</div><div class="stat-sub">Available now</div></div>
+          <div class="stat-card s-amber"><div class="stat-label">Few left</div><div class="stat-val" id="mm-fewleft">0</div><div class="stat-sub">≤ 5 units</div></div>
+          <div class="stat-card s-blue"><div class="stat-label">Out of stock</div><div class="stat-val" id="mm-oos">0</div><div class="stat-sub">Hidden from menu</div></div>
+        </div>
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:14px;font-weight:800">TildaBite Menu Items</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="mm-search" placeholder="Search items…" oninput="renderMenuMgmt()" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12px;outline:none;width:180px">
+              <button class="tb-btn accent" onclick="openMenuEditor(null)"><i class="ti ti-plus" style="font-size:13px"></i> Add item</button>
+            </div>
+          </div>
+          <div id="menu-items-list"></div>
+        </div>
+
+        <!-- MENU EDIT MODAL -->
+        <div class="modal-bg hidden" id="menu-modal">
+          <div class="modal" style="max-width:460px;max-height:90vh;overflow-y:auto">
+            <h3 id="menu-modal-title">Add menu item</h3>
+            <p>Changes reflect instantly on the customer ordering app.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="modal-field" style="grid-column:1/-1"><label>Item name *</label><input type="text" id="mm-name" placeholder="Chicken Biryani"></div>
+              <div class="modal-field" style="grid-column:1/-1"><label>Description</label><input type="text" id="mm-desc" placeholder="Slow-cooked basmati with secret spices"></div>
+              <div class="modal-field"><label>Price (₹) *</label><input type="number" id="mm-price" placeholder="199" min="0"></div>
+              <div class="modal-field"><label>Category *</label>
+                <select id="mm-cat">
+                  <option value="biryani">Biryani</option><option value="chicken">Chicken</option>
+                  <option value="veg">Veg</option><option value="snacks">Snacks</option>
+                  <option value="drinks">Drinks</option>
+                </select>
+              </div>
+              <div class="modal-field"><label>Emoji</label><input type="text" id="mm-emoji" placeholder="🍛" maxlength="4"></div>
+              <div class="modal-field"><label>Diet</label>
+                <select id="mm-veg"><option value="true">Veg 🌿</option><option value="false">Non-Veg 🍗</option></select>
+              </div>
+              <div class="modal-field" style="grid-column:1/-1"><label>Image URL (optional)</label><input type="text" id="mm-image" placeholder="https://… or leave blank to use emoji"></div>
+              <div class="modal-field"><label>Stock left (blank = unlimited)</label><input type="number" id="mm-stock" placeholder="e.g. 20" min="0"></div>
+              <div class="modal-field"><label>Status</label>
+                <select id="mm-oos-toggle"><option value="false">Available</option><option value="true">Out of stock</option></select>
+              </div>
+              <div class="modal-field" style="grid-column:1/-1">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <input type="checkbox" id="mm-bestseller" style="width:auto;accent-color:var(--accent)">
+                  <span>⭐ Mark as Best Seller (shown with badge to customers)</span>
+                </label>
+              </div>
+            </div>
+            <div class="modal-actions" style="margin-top:8px">
+              <button class="btn-cancel" id="mm-delete-btn" onclick="deleteMenuItem()" style="margin-right:auto;color:var(--red);border-color:var(--red);display:none">Delete</button>
+              <button class="btn-cancel" onclick="closeMenuModal()">Cancel</button>
+              <button class="btn-confirm" onclick="saveMenuItem()">Save item</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+const SUPABASE_URL = 'https://aoamlgamtpmcjchbxtxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Y6KKaDPew8VWHolwumkNPA_MFlhvce0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ADMIN_CREDENTIALS = { id: 'admin@tildabite.com', password: 'Admin@1234' };
+
+function adminLogin(){
+  const id   = document.getElementById('admin-id-input').value.trim().toLowerCase();
+  const pass = document.getElementById('admin-pass-input').value;
+  const errEl = document.getElementById('admin-login-error');
+  if(!id || !pass){ errEl.textContent='Please enter both Admin ID and password.'; errEl.style.display='block'; return; }
+  if(id !== ADMIN_CREDENTIALS.id || pass !== ADMIN_CREDENTIALS.password){
+    errEl.textContent='Invalid Admin ID or password. Access denied.'; errEl.style.display='block';
+    document.getElementById('admin-pass-input').value=''; return;
+  }
+  errEl.style.display='none';
+  document.getElementById('admin-login-screen').style.display='none';
+  document.getElementById('admin-shell').style.display='flex';
+  adminRefreshOrders(); adminLoadRiders(); adminLoadNotifications(); renderMenuMgmt();
+  loadStoreSettings();
+  adminSubscribeRealtime();
+  toast('Welcome back, Admin! 👋');
+}
+
+function adminSignOut(){
+  document.getElementById('admin-shell').style.display='none';
+  document.getElementById('admin-login-screen').style.display='flex';
+  document.getElementById('admin-id-input').value='';
+  document.getElementById('admin-pass-input').value='';
+  toast('Signed out');
+}
+
+let RIDERS=[];
+let ORDERS=[]; let currentFilter='all'; let assigningOrder=null; let notifLog=[]; let isDark=false;
+let STORE_SETTINGS = { is_open:true, opening_time:'10:00', closing_time:'23:00', auto_reopen:true, phone:'' };
+
+async function loadStoreSettings(){
+  const { data, error } = await sb.from('store_settings').select('*').eq('id',1).maybeSingle();
+  if(error || !data){ console.error(error); return; }
+  STORE_SETTINGS = data;
+  document.getElementById('settings-is-open').checked = data.is_open;
+  document.getElementById('settings-opening-time').value = data.opening_time;
+  document.getElementById('settings-closing-time').value = data.closing_time;
+  document.getElementById('settings-phone').value = data.phone || '';
+  document.getElementById('settings-auto-reopen').checked = data.auto_reopen;
+  updateStoreStatusPill();
+}
+function updateStoreStatusPill(){
+  const pill = document.getElementById('store-status-pill');
+  const txt = document.getElementById('store-status-text');
+  if(STORE_SETTINGS.is_open){
+    txt.textContent = 'Open';
+    pill.style.color = 'var(--green)'; pill.style.borderColor = 'var(--gborder)';
+  } else {
+    txt.textContent = 'Closed';
+    pill.style.color = 'var(--red)'; pill.style.borderColor = 'var(--rborder)';
+  }
+}
+let _storeConfirmCheckbox = null; // set when the confirm was triggered from the Settings switch (so we can revert it on Cancel)
+let _pendingStoreState = null;
+
+function quickToggleStore(){
+  requestStoreToggle(!STORE_SETTINGS.is_open, null);
+}
+function onStoreToggleChange(){
+  const cb = document.getElementById('settings-is-open');
+  requestStoreToggle(cb.checked, cb);
+}
+function requestStoreToggle(newState, checkboxEl){
+  _storeConfirmCheckbox = checkboxEl;
+  _pendingStoreState = newState;
+  document.getElementById('store-confirm-icon').textContent = newState ? '✅' : '🌙';
+  document.getElementById('store-confirm-title').textContent = newState ? 'Open the restaurant?' : 'Close the restaurant?';
+  document.getElementById('store-confirm-body').textContent = newState
+    ? 'Customers will immediately be able to browse and place new orders again.'
+    : 'Customers won\u2019t be able to place new orders. They\u2019ll see a "We\u2019ll be available soon" screen until you reopen.';
+  const btn = document.getElementById('store-confirm-btn');
+  btn.textContent = newState ? 'Yes, open now' : 'Yes, close now';
+  btn.style.background = newState ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('store-confirm-modal').classList.remove('hidden');
+}
+function cancelStoreToggle(){
+  document.getElementById('store-confirm-modal').classList.add('hidden');
+  if(_storeConfirmCheckbox){ _storeConfirmCheckbox.checked = STORE_SETTINGS.is_open; }
+  updateStoreStatusPill();
+  _storeConfirmCheckbox = null; _pendingStoreState = null;
+}
+async function confirmStoreToggle(){
+  const newState = _pendingStoreState;
+  const { error } = await sb.from('store_settings').update({ is_open: newState }).eq('id',1);
+  document.getElementById('store-confirm-modal').classList.add('hidden');
+  if(error){
+    toast('❌ '+error.message);
+    if(_storeConfirmCheckbox){ _storeConfirmCheckbox.checked = STORE_SETTINGS.is_open; }
+    updateStoreStatusPill();
+    _storeConfirmCheckbox = null; _pendingStoreState = null;
+    return;
+  }
+  STORE_SETTINGS.is_open = newState;
+  document.getElementById('settings-is-open').checked = newState;
+  updateStoreStatusPill();
+  toast(newState ? 'Store marked Open ✓ — now visible to customers' : 'Store marked Closed — customers will see "We\u2019ll be available soon"');
+  _storeConfirmCheckbox = null; _pendingStoreState = null;
+}
+async function saveStoreSettings(){
+  const payload = {
+    is_open: document.getElementById('settings-is-open').checked,
+    opening_time: document.getElementById('settings-opening-time').value || '10:00',
+    closing_time: document.getElementById('settings-closing-time').value || '23:00',
+    phone: document.getElementById('settings-phone').value.trim(),
+    auto_reopen: document.getElementById('settings-auto-reopen').checked
+  };
+  const { error } = await sb.from('store_settings').update(payload).eq('id',1);
+  if(error){ toast('❌ '+error.message); return; }
+  STORE_SETTINGS = { ...STORE_SETTINGS, ...payload };
+  updateStoreStatusPill();
+  toast('Settings saved ✓ — live on customer app');
+}
+
+async function adminLoadRiders(){
+  const { data, error } = await sb.from('riders').select('*').order('name');
+  if(error){ console.error(error); return; }
+  RIDERS = data.map(r => ({
+    id: r.id, name: r.name, phone: r.phone, rating: r.rating,
+    deliveries: r.deliveries, orders: 0
+  }));
+  recomputeRiderOrderCounts();
+  renderRiders();
+  const selEl = document.getElementById('order-rider-filter');
+  if(selEl) selEl.dataset.filled = '0';
+  populateRiderFilterOptions();
+}
+
+function recomputeRiderOrderCounts(){
+  RIDERS.forEach(r=>{ r.orders = ORDERS.filter(o=>o.rider_id===r.id && o.status==='otw').length; });
+}
+
+async function adminRefreshOrders(){
+  const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+  if(error){ console.error(error); return; }
+  ORDERS = data.map(o=>({
+    id:o.id, customer:o.customer_name, phone:o.customer_phone||'—',
+    time: new Date(o.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    date: new Date(o.created_at).toLocaleDateString('en-IN'),
+    created_at: o.created_at,
+    amount:o.total, subtotal:o.subtotal, tax:o.tax, status:o.status, rider:o.rider_name||null, rider_id:o.rider_id||null,
+    otp:o.otp||null, address:o.address||'—', lat:o.lat||null, lng:o.lng||null, items:(o.items||[]).map(i=>({name:i.name, qty:i.qty, price:i.price}))
+  }));
+  recomputeRiderOrderCounts();
+  renderAllOrders();renderRecentOrders();updateOverviewStats();renderRiders();
+  if(document.getElementById('view-menu-mgmt')?.classList.contains('active')) renderMenuMgmt();
+  if(document.getElementById('view-analytics')?.classList.contains('active')) renderAnalytics();
+}
+
+// Realtime: orders & riders update instantly without polling
+function adminSubscribeRealtime(){
+  sb.channel('admin-orders')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => adminRefreshOrders())
+    .subscribe();
+  sb.channel('admin-riders')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'riders' }, () => adminLoadRiders())
+    .subscribe();
+  sb.channel('admin-menu')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => renderMenuMgmt())
+    .subscribe();
+  sb.channel('admin-store-settings')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, () => loadStoreSettings())
+    .subscribe();
+}
+
+function statusBadge(s){
+  const map={pending:'<span class="status-badge s-pending"><i class="ti ti-clock" style="font-size:10px"></i>Pending</span>',preparing:'<span class="status-badge s-pending"><i class="ti ti-chef-hat" style="font-size:10px"></i>Preparing</span>',otw:'<span class="status-badge s-otw"><i class="ti ti-motorbike" style="font-size:10px"></i>Out for delivery</span>',delivered:'<span class="status-badge s-delivered"><i class="ti ti-check" style="font-size:10px"></i>Delivered</span>',cancelled:'<span class="status-badge s-cancelled">Cancelled</span>'};
+  return map[s]||s;
+}
+function actionCell(o){
+  if(o.status==='pending')return '<button class="assign-btn" onclick="openAssign(\''+o.id+'\')"><i class="ti ti-user-plus" style="font-size:12px"></i> Assign rider</button>';
+  if(o.status==='otw')return '<span class="assigned-pill"><i class="ti ti-circle-check" style="font-size:12px"></i>'+o.rider+'</span>';
+  return '<span style="font-size:11px;color:var(--text3)">Completed</span>';
+}
+function renderOrderRows(orders,targetId){
+  document.getElementById(targetId).innerHTML=orders.map(o=>'<div class="table-row" id="row-'+o.id+'"><div class="table-cell order-id-cell">'+o.id+'</div><div class="table-cell" style="overflow:hidden"><div style="font-weight:600;font-size:13px">'+o.customer+(o.lat&&o.lng?' <i class="ti ti-map-pin-check" style="font-size:12px;color:var(--green)" title="Precise location pinned"></i>':'')+'</div><div style="font-size:11px;color:var(--text3)">'+o.time+'</div></div><div class="table-cell">₹'+o.amount+'</div><div class="table-cell">'+statusBadge(o.status)+'</div><div class="table-cell" style="font-size:12px;color:var(--text2)">'+(o.rider||'—')+'</div><div class="table-cell" style="display:flex;gap:6px">'+actionCell(o)+' <button class="tb-btn" style="padding:4px 10px;font-size:11px" onclick="openOrderDetails(\''+o.id+'\')"><i class="ti ti-receipt" style="font-size:12px"></i> View</button></div></div>').join('');
+}
+function renderRecentOrders(){renderOrderRows(ORDERS.slice(0,5),'recent-orders-body');}
+function passesDateFilter(o){
+  const mode = document.getElementById('order-date-filter')?.value || 'all';
+  if(mode === 'all') return true;
+  const d = new Date(o.date.split('/').reverse().join('-')); // date is en-IN dd/mm/yyyy
+  const now = new Date(); now.setHours(0,0,0,0);
+  if(mode === 'today'){ return d.toDateString() === now.toDateString(); }
+  if(mode === 'yesterday'){ const y=new Date(now); y.setDate(y.getDate()-1); return d.toDateString()===y.toDateString(); }
+  if(mode === 'week'){ const w=new Date(now); w.setDate(w.getDate()-7); return d>=w; }
+  if(mode === 'month'){ return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); }
+  if(mode === 'custom'){
+    const from = document.getElementById('order-date-from').value;
+    const to = document.getElementById('order-date-to').value;
+    if(from && d < new Date(from)) return false;
+    if(to && d > new Date(to+'T23:59:59')) return false;
+    return true;
+  }
+  return true;
+}
+function onDateFilterChange(){
+  const mode = document.getElementById('order-date-filter').value;
+  document.getElementById('order-date-from').style.display = mode==='custom' ? 'block' : 'none';
+  document.getElementById('order-date-to').style.display = mode==='custom' ? 'block' : 'none';
+  renderAllOrders();
+}
+function renderAllOrders(){
+  const q = (document.getElementById('order-search')?.value||'').toLowerCase();
+  const riderF = document.getElementById('order-rider-filter')?.value || 'all';
+  let filtered = currentFilter==='all' ? ORDERS.slice() : ORDERS.filter(o=>o.status===currentFilter);
+  filtered = filtered.filter(passesDateFilter);
+  if(riderF !== 'all') filtered = filtered.filter(o => riderF==='unassigned' ? !o.rider_id : o.rider_id===riderF);
+  if(q) filtered = filtered.filter(o => o.id.toLowerCase().includes(q) || (o.customer||'').toLowerCase().includes(q) || (o.phone||'').toLowerCase().includes(q));
+  renderOrderRows(filtered,'all-orders-body');
+  populateRiderFilterOptions();
+}
+function populateRiderFilterOptions(){
+  const sel = document.getElementById('order-rider-filter');
+  if(!sel || sel.dataset.filled==='1') return;
+  sel.innerHTML = '<option value="all">All riders</option><option value="unassigned">Unassigned</option>' +
+    RIDERS.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+  sel.dataset.filled='1';
+}
+function filterOrders(f,btn){ currentFilter=f; document.querySelectorAll('#order-filters .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderAllOrders(); }
+function openAssign(orderId){ assigningOrder=orderId; document.getElementById('modal-order-label').textContent='Assigning rider for '+orderId; populateRiderSelect(); document.getElementById('assign-modal').classList.remove('hidden'); }
+function closeModal(){ document.getElementById('assign-modal').classList.add('hidden'); assigningOrder=null; }
+
+let detailsOrderId = null;
+function openOrderDetails(orderId){
+  const o = ORDERS.find(x=>x.id===orderId);
+  if(!o) return;
+  detailsOrderId = orderId;
+  const itemsRows = o.items.map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${i.name} × ${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('');
+  document.getElementById('order-details-body').innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong>Order ID</strong><span>${o.id}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong>Date</strong><span>${o.date} · ${o.time}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong>Status</strong><span>${o.status}</span></div>
+    <hr style="margin:10px 0;border-color:var(--border)">
+    <div style="margin-bottom:4px"><strong>Customer</strong></div>
+    <div style="color:var(--text2);margin-bottom:2px">${o.customer}</div>
+    <div style="color:var(--text2);margin-bottom:2px">${o.phone}</div>
+    <div style="color:var(--text2);margin-bottom:2px">${o.address}</div>
+    ${o.lat && o.lng ? `<div style="margin-bottom:8px"><a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lng}" target="_blank" style="color:var(--blue);font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-map-pin-check" style="font-size:13px"></i> View pinned location on map (${o.lat.toFixed(5)}, ${o.lng.toFixed(5)})</a></div>` : `<div style="color:var(--text3);font-size:11px;margin-bottom:8px">No precise pin — customer used address text only</div>`}
+    <div style="margin-bottom:4px"><strong>Rider</strong></div>
+    <div style="color:var(--text2);margin-bottom:8px">${o.rider || 'Not assigned yet'}</div>
+    <div style="margin-bottom:4px"><strong>Items</strong></div>
+    ${itemsRows}
+    <div style="display:flex;justify-content:space-between;padding-top:8px;margin-top:6px"><span>Subtotal</span><span>₹${o.subtotal}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Tax</span><span>₹${o.tax}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px;margin-top:4px"><span>Total</span><span>₹${o.amount}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px"><span>Delivery OTP</span><span>${o.otp || '—'}</span></div>
+  `;
+  document.getElementById('order-details-modal').classList.remove('hidden');
+}
+function closeOrderDetails(){ document.getElementById('order-details-modal').classList.add('hidden'); detailsOrderId = null; }
+
+function printOrderSlip(){
+  const o = ORDERS.find(x=>x.id===detailsOrderId);
+  if(!o) return;
+  const itemsRows = o.items.map(i=>`<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">₹${i.price*i.qty}</td></tr>`).join('');
+  const win = window.open('', '_blank', 'width=380,height=600');
+  win.document.write(`
+    <html><head><title>${o.id} — TildaBite</title>
+    <style>
+      body{font-family:monospace;padding:16px;font-size:13px;color:#000}
+      h2{text-align:center;margin-bottom:0}
+      .sub{text-align:center;font-size:11px;margin-bottom:14px}
+      table{width:100%;border-collapse:collapse;margin:10px 0}
+      td{padding:3px 0}
+      hr{border:none;border-top:1px dashed #000;margin:8px 0}
+      .row{display:flex;justify-content:space-between}
+      .total{font-weight:bold;font-size:15px}
+    </style></head><body>
+      <h2>TildaBite</h2>
+      <div class="sub">Order Slip</div>
+      <hr>
+      <div class="row"><span>Order ID</span><span>${o.id}</span></div>
+      <div class="row"><span>Date</span><span>${o.date} ${o.time}</span></div>
+      <div class="row"><span>Status</span><span>${o.status}</span></div>
+      <hr>
+      <div><strong>Customer:</strong> ${o.customer}</div>
+      <div><strong>Phone:</strong> ${o.phone}</div>
+      <div><strong>Address:</strong> ${o.address}</div>
+      <div><strong>Rider:</strong> ${o.rider || 'Not assigned'}</div>
+      <hr>
+      <table>
+        <tr><td><strong>Item</strong></td><td style="text-align:center"><strong>Qty</strong></td><td style="text-align:right"><strong>Amt</strong></td></tr>
+        ${itemsRows}
+      </table>
+      <hr>
+      <div class="row"><span>Subtotal</span><span>₹${o.subtotal}</span></div>
+      <div class="row"><span>Tax</span><span>₹${o.tax}</span></div>
+      <div class="row total"><span>Total</span><span>₹${o.amount}</span></div>
+      <hr>
+      <div class="row"><span>Delivery OTP</span><span>${o.otp || '—'}</span></div>
+      <hr>
+      <div style="text-align:center;font-size:11px;margin-top:10px">Thank you for ordering with TildaBite!</div>
+    </body></html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+async function confirmAssign(){
+  const sel=document.getElementById('rider-select');
+  if(!sel.value){toast('Select a rider first');return;}
+  const riderId=sel.value; const riderName=sel.options[sel.selectedIndex].text.split(' (')[0];
+  const { error } = await sb.from('orders').update({
+    status: 'otw', rider_id: riderId, rider_name: riderName
+  }).eq('id', assigningOrder);
+  if(error){ toast('❌ '+error.message); return; }
+  closeModal();
+  toast('Rider assigned! Customer OTP is visible on their orders page.');
+  adminRefreshOrders();
+}
+function populateRiderSelect(){ const sel=document.getElementById('rider-select'); recomputeRiderOrderCounts(); sel.innerHTML='<option value="">Choose a rider...</option>'+RIDERS.map(r=>'<option value="'+r.id+'">'+r.name+' (⭐'+r.rating+')'+(r.orders>0?' — '+r.orders+' active':' — free')+'</option>').join(''); }
+function renderRiders(){ document.getElementById('riders-grid').innerHTML=RIDERS.map(r=>'<div class="rider-card"><div class="rider-avatar">'+r.name.split(' ').map(w=>w[0]).join('')+'</div><div class="rider-name">'+r.name+'</div><div class="rider-phone"><i class="ti ti-phone" style="font-size:12px;margin-right:4px"></i>'+r.phone+'</div><div class="rider-stats"><div class="r-stat"><div class="r-stat-val">'+r.deliveries+'</div><div class="r-stat-label">Deliveries</div></div><div class="r-stat"><div class="r-stat-val">'+r.rating+'</div><div class="r-stat-label">Rating</div></div><div class="r-stat"><div class="r-stat-val">'+r.orders+'</div><div class="r-stat-label">Active</div></div></div><span class="rider-status '+(r.orders>0?'r-busy':'r-available')+'"><i class="ti ti-circle-filled" style="font-size:8px"></i>'+(r.orders>0?r.orders+' order'+(r.orders>1?'s':'')+' in progress':'No active orders')+'</span></div>').join(''); }
+function renderNotifLog(){ const icons={order:'ti-package',promo:'ti-speakerphone',alert:'ti-alert-triangle'}; const cls={order:'ni-order',promo:'ni-promo',alert:'ni-alert'}; document.getElementById('notif-log').innerHTML=notifLog.map(n=>'<div class="notif-item"><div class="notif-icon '+(cls[n.type]||'ni-order')+'"><i class="ti '+(icons[n.type]||'ti-bell')+'" style="font-size:15px"></i></div><div class="notif-content"><h4>'+n.title+'</h4><p>'+n.msg+'</p><p style="margin-top:3px;font-size:11px;color:var(--text3)">To: '+n.target+'</p></div><div class="notif-meta">'+n.time+'</div></div>').join(''); }
+async function adminLoadNotifications(){
+  const { data, error } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
+  if(error){ console.error(error); return; }
+  notifLog = data.map(n => ({
+    type: n.type, title: n.title, msg: n.message,
+    time: new Date(n.created_at).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}),
+    target: n.target
+  }));
+  renderNotifLog();
+}
+async function sendNotification(){
+  const title=document.getElementById('notif-title').value.trim();
+  const msg=document.getElementById('notif-msg').value.trim();
+  const target=document.getElementById('notif-target').value;
+  if(!title||!msg){toast('Fill in title and message');return;}
+  const { error } = await sb.from('notifications').insert({ type:'order', title, message: msg, target });
+  if(error){ toast('❌ '+error.message); return; }
+  document.getElementById('notif-title').value=''; document.getElementById('notif-msg').value='';
+  toast('Notification sent!');
+  adminLoadNotifications();
+}
+// ─── MENU (live from Supabase; stock/sold auto-updated by DB trigger on order insert) ───
+let MENU_ITEMS = [];
+let editingMenuId = null;
+
+async function loadMenu(){
+  const { data, error } = await sb.from('menu_items').select('*').order('id');
+  if(error){ console.error(error); MENU_ITEMS = []; return; }
+  MENU_ITEMS = data.map(m => ({
+    id: m.id, name: m.name, desc: m.description, price: m.price, cat: m.category,
+    emoji: m.emoji, veg: m.veg, image: m.image || '', stock: m.stock,
+    oos: m.oos, bestseller: m.bestseller, sold: m.sold, active: m.active
+  }));
+}
+
+async function renderMenuMgmt(){
+  await loadMenu();
+  const q = (document.getElementById('mm-search')?.value||'').toLowerCase();
+  const list = MENU_ITEMS.filter(m => !q || m.name.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q));
+  // stats
+  const inStock = MENU_ITEMS.filter(m=>!m.oos && m.active).length;
+  const fewLeft = MENU_ITEMS.filter(m=>!m.oos && typeof m.stock==='number' && m.stock>0 && m.stock<=5).length;
+  const oos     = MENU_ITEMS.filter(m=>m.oos || (typeof m.stock==='number' && m.stock===0)).length;
+  document.getElementById('mm-total').textContent = MENU_ITEMS.length;
+  document.getElementById('mm-instock').textContent = inStock;
+  document.getElementById('mm-fewleft').textContent = fewLeft;
+  document.getElementById('mm-oos').textContent = oos;
+
+  document.getElementById('menu-items-list').innerHTML = list.map(m=>{
+    const stockTxt = (typeof m.stock==='number')
+      ? (m.stock===0 ? '<span style="color:var(--red);font-weight:700">0 left</span>'
+        : m.stock<=5 ? '<span style="color:var(--amber);font-weight:700">Only '+m.stock+' left</span>'
+        : m.stock+' in stock')
+      : '<span style="color:var(--text3)">Unlimited</span>';
+    const statusBadge = m.oos
+      ? '<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:var(--rbg);color:var(--red);border:1px solid var(--rborder)">OUT OF STOCK</span>'
+      : (typeof m.stock==='number' && m.stock>0 && m.stock<=5)
+        ? '<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:var(--ambg);color:var(--amber);border:1px solid var(--amborder)">FEW LEFT</span>'
+        : '<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:var(--gbg);color:var(--green);border:1px solid var(--gborder)">AVAILABLE</span>';
+    const bestseller = m.bestseller ? '<span style="padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.3);margin-left:4px">⭐ BEST SELLER</span>' : '';
+    const img = m.image
+      ? `<img src="${m.image}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--card)">`
+      : `<div style="width:48px;height:48px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:26px">${m.emoji||'🍽️'}</div>`;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)">
+      ${img}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap">${m.name} ${bestseller}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.cat} · ${m.veg?'Veg':'Non-Veg'} · Sold: ${m.sold||0}</div>
+      </div>
+      <div style="font-size:12px;width:110px;text-align:right">${stockTxt}</div>
+      <div style="font-size:13px;font-weight:800;color:var(--accent);width:60px;text-align:right">₹${m.price}</div>
+      <div style="width:120px;text-align:center">${statusBadge}</div>
+      <button class="tb-btn" onclick="openMenuEditor(${m.id})" style="padding:5px 12px;font-size:11px"><i class="ti ti-edit" style="font-size:12px"></i> Edit</button>
+    </div>`;
+  }).join('') || '<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">No items match your search.</div>';
+}
+
+async function openMenuEditor(id){
+  await loadMenu();
+  editingMenuId = id;
+  const m = id ? MENU_ITEMS.find(x=>x.id===id) : {name:'',desc:'',price:'',cat:'biryani',emoji:'🍽️',veg:true,image:'',stock:'',oos:false,bestseller:false};
+  if(!m) return;
+  document.getElementById('menu-modal-title').textContent = id ? 'Edit menu item' : 'Add menu item';
+  document.getElementById('mm-name').value = m.name||'';
+  document.getElementById('mm-desc').value = m.desc||'';
+  document.getElementById('mm-price').value = m.price||'';
+  document.getElementById('mm-cat').value = m.cat||'biryani';
+  document.getElementById('mm-emoji').value = m.emoji||'';
+  document.getElementById('mm-veg').value = String(!!m.veg);
+  document.getElementById('mm-image').value = m.image||'';
+  document.getElementById('mm-stock').value = (typeof m.stock==='number') ? m.stock : '';
+  document.getElementById('mm-oos-toggle').value = String(!!m.oos);
+  document.getElementById('mm-bestseller').checked = !!m.bestseller;
+  document.getElementById('mm-delete-btn').style.display = id ? 'inline-block' : 'none';
+  document.getElementById('menu-modal').classList.remove('hidden');
+}
+function closeMenuModal(){ document.getElementById('menu-modal').classList.add('hidden'); editingMenuId = null; }
+
+async function saveMenuItem(){
+  const name = document.getElementById('mm-name').value.trim();
+  const price = parseInt(document.getElementById('mm-price').value);
+  if(!name){ toast('Item name is required'); return; }
+  if(isNaN(price) || price<0){ toast('Enter a valid price'); return; }
+  const stockRaw = document.getElementById('mm-stock').value.trim();
+  const stock = stockRaw==='' ? null : Math.max(0, parseInt(stockRaw));
+  let oos = document.getElementById('mm-oos-toggle').value === 'true';
+  if(stock === 0) oos = true;
+  const payload = {
+    name, description: document.getElementById('mm-desc').value.trim(),
+    price, category: document.getElementById('mm-cat').value,
+    emoji: document.getElementById('mm-emoji').value.trim() || '🍽️',
+    veg: document.getElementById('mm-veg').value === 'true',
+    image: document.getElementById('mm-image').value.trim(),
+    stock, oos, bestseller: document.getElementById('mm-bestseller').checked,
+    active: true,
+  };
+  let error;
+  if(editingMenuId){
+    ({ error } = await sb.from('menu_items').update(payload).eq('id', editingMenuId));
+    if(!error) toast('Item updated — live on customer app ✓');
+  } else {
+    ({ error } = await sb.from('menu_items').insert({ ...payload, sold: 0 }));
+    if(!error) toast('Item added — live on customer app ✓');
+  }
+  if(error){ toast('❌ '+error.message); return; }
+  closeMenuModal(); renderMenuMgmt();
+}
+async function deleteMenuItem(){
+  if(!editingMenuId) return;
+  if(!confirm('Delete this item? Customers will no longer see it.')) return;
+  const { error } = await sb.from('menu_items').delete().eq('id', editingMenuId);
+  if(error){ toast('❌ '+error.message); return; }
+  closeMenuModal(); renderMenuMgmt();
+  toast('Item deleted');
+}
+
+function showView(v,btn){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const titles={overview:'Overview',orders:'All orders',analytics:'Analytics',customers:'Customers',riders:'Riders',notifications:'Notifications','menu-mgmt':'Menu management',settings:'Settings'};
+  document.getElementById('page-title').textContent=titles[v]||v;
+  if(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  if(v==='analytics') renderAnalytics();
+  if(v==='customers') loadAndRenderCustomers();
+}
+let tTimer;
+function toast(msg){ clearTimeout(tTimer); document.getElementById('tmsg').textContent=msg; document.getElementById('toast').classList.add('show'); tTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400); }
+function toggleTheme(){ isDark=!isDark; document.body.classList.toggle('dark',isDark); document.getElementById('theme-icon').className=isDark?'ti ti-sun':'ti ti-moon'; }
+function updateOverviewStats(){ const pending=ORDERS.filter(x=>x.status==='pending').length; const total=ORDERS.length; const revenue=ORDERS.filter(x=>x.status!=='cancelled').reduce((s,o)=>s+o.amount,0); const activeRiders=RIDERS.filter(r=>r.orders>0).length; document.getElementById('ov-pending').textContent=pending; document.getElementById('ov-total').textContent=total; document.getElementById('ov-revenue').textContent='₹'+revenue.toLocaleString('en-IN'); document.getElementById('ov-riders').textContent=activeRiders; document.getElementById('pending-badge').textContent=pending; }
+
+// ═══════════════════ ANALYTICS ═══════════════════
+let analyticsRange = '24h';
+function setAnalyticsRange(r,btn){
+  analyticsRange = r;
+  document.querySelectorAll('#analytics-range .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalytics();
+}
+function ordersInRange(range){
+  const now = new Date();
+  let from;
+  if(range==='24h'){ from = new Date(now.getTime() - 24*3600*1000); }
+  else if(range==='week'){ from = new Date(now.getTime() - 7*24*3600*1000); }
+  else if(range==='month'){ from = new Date(now.getFullYear(), now.getMonth(), 1); }
+  else if(range==='year'){ from = new Date(now.getFullYear(), 0, 1); }
+  return ORDERS.filter(o => new Date(o.created_at) >= from && o.status!=='cancelled');
+}
+function renderAnalytics(){
+  const orders = ordersInRange(analyticsRange);
+  const revenue = orders.reduce((s,o)=>s+o.amount,0);
+  const aov = orders.length ? Math.round(revenue/orders.length) : 0;
+  document.getElementById('an-orders').textContent = orders.length;
+  document.getElementById('an-revenue').textContent = '₹'+revenue.toLocaleString('en-IN');
+  document.getElementById('an-aov').textContent = '₹'+aov;
+
+  // Trend buckets: hourly for 24h, daily otherwise
+  let buckets = {};
+  let labelFn, keyFn;
+  if(analyticsRange==='24h'){
+    keyFn = d => d.getHours()+':00';
+    for(let h=0;h<24;h++) buckets[h+':00']=0;
+    orders.forEach(o=>{ const h=new Date(o.created_at).getHours(); buckets[h+':00'] = (buckets[h+':00']||0)+1; });
+  } else {
+    orders.forEach(o=>{
+      const d = new Date(o.created_at);
+      const key = d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+      buckets[key] = (buckets[key]||0)+1;
+    });
+  }
+  const entries = Object.entries(buckets);
+  const maxV = Math.max(1, ...entries.map(e=>e[1]));
+  document.getElementById('an-trend-chart').innerHTML = entries.length ? `
+    <div style="display:flex;align-items:flex-end;gap:4px;height:140px;overflow-x:auto">
+      ${entries.map(([label,val])=>`
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:28px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${val||''}</div>
+          <div style="width:18px;background:var(--accent);border-radius:3px 3px 0 0;height:${Math.max(2,(val/maxV)*100)}px"></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap">${label}</div>
+        </div>`).join('')}
+    </div>` : '<div style="color:var(--text3);font-size:13px">No orders in this range yet.</div>';
+
+  // Peak hours (all orders in range, grouped by hour of day regardless of bucket mode)
+  const hourCounts = new Array(24).fill(0);
+  orders.forEach(o=>{ hourCounts[new Date(o.created_at).getHours()]++; });
+  const maxH = Math.max(1, ...hourCounts);
+  document.getElementById('an-hours-chart').innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:3px;height:100px">
+      ${hourCounts.map((v,h)=>`
+        <div title="${h}:00 — ${v} orders" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+          <div style="width:100%;background:var(--blue);border-radius:2px 2px 0 0;height:${Math.max(2,(v/maxH)*80)}px"></div>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:4px"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span></div>
+  `;
+
+  // Best-selling items (from MENU_ITEMS sold column — reflects all-time; filtered by items in range for the range view)
+  const itemCounts = {};
+  orders.forEach(o=>{ (o.items||[]).forEach(i=>{ itemCounts[i.name] = (itemCounts[i.name]||0) + i.qty; }); });
+  const top = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('an-top-items').innerHTML = top.length ? top.map(([name,qty],i)=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;${i<top.length-1?'border-bottom:1px solid var(--border)':''}">
+      <span>${i+1}. ${name}</span><span style="font-weight:700">${qty} sold</span>
+    </div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:8px 0">No sales in this range yet.</div>';
+}
+
+// ═══════════════════ CUSTOMERS ═══════════════════
+let CUSTOMERS_CACHE = [];
+async function loadAndRenderCustomers(){
+  const { data, error } = await sb.from('customers').select('*').order('created_at', { ascending: false });
+  if(error){ console.error(error); return; }
+  CUSTOMERS_CACHE = data;
+  renderCustomers();
+}
+function renderCustomers(){
+  const q = (document.getElementById('customer-search')?.value||'').toLowerCase();
+  const rows = CUSTOMERS_CACHE
+    .map(c => {
+      const theirOrders = ORDERS.filter(o => o.customer && (o.phone===c.phone || o.customer===c.name));
+      const spent = theirOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.amount,0);
+      return { ...c, orderCount: theirOrders.length, spent };
+    })
+    .filter(c => !q || c.name.toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q))
+    .sort((a,b)=>b.orderCount-a.orderCount);
+  document.getElementById('customers-body').innerHTML = rows.map(c => `
+    <div class="table-row" style="grid-template-columns:1fr 1fr 90px 90px 100px;cursor:pointer" onclick="openCustomerHistory('${c.id}')">
+      <div class="table-cell"><div style="font-weight:600;font-size:13px">${c.name}</div></div>
+      <div class="table-cell" style="font-size:12px;color:var(--text2)">${c.email}<br>${c.phone||'—'}</div>
+      <div class="table-cell">${c.orderCount}</div>
+      <div class="table-cell">₹${c.spent}</div>
+      <div class="table-cell">${c.orderCount>=3 ? '<span class="status-badge s-delivered">Regular</span>' : '<span style="color:var(--text3);font-size:12px">New</span>'}</div>
+    </div>
+  `).join('') || '<div style="padding:20px;color:var(--text3);text-align:center">No customers found.</div>';
+}
+function openCustomerHistory(customerId){
+  const c = CUSTOMERS_CACHE.find(x=>x.id===customerId);
+  if(!c) return;
+  const theirOrders = ORDERS.filter(o => o.phone===c.phone || o.customer===c.name).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  document.getElementById('customer-history-body').innerHTML = `
+    <div style="margin-bottom:10px"><strong>${c.name}</strong><br><span style="color:var(--text2);font-size:12px">${c.email} · ${c.phone||'—'}</span></div>
+    ${theirOrders.map(o=>`
+      <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between"><strong>${o.id}</strong><span>${statusBadge(o.status)}</span></div>
+        <div style="font-size:12px;color:var(--text2)">${o.date} · ₹${o.amount}</div>
+      </div>
+    `).join('') || '<div style="color:var(--text3);font-size:13px">No orders yet.</div>'}
+  `;
+  document.getElementById('customer-history-modal').classList.remove('hidden');
+}
+function closeCustomerHistory(){ document.getElementById('customer-history-modal').classList.add('hidden'); }
+
+// ═══════════════════ CSV EXPORT ═══════════════════
+function openExportModal(){ document.getElementById('export-modal').classList.remove('hidden'); }
+function closeExportModal(){ document.getElementById('export-modal').classList.add('hidden'); }
+function exportOrdersCSV(){
+  const from = document.getElementById('export-from').value;
+  const to = document.getElementById('export-to').value;
+  if(!from || !to){ toast('Select both from and to dates'); return; }
+  const fromD = new Date(from);
+  const toD = new Date(to+'T23:59:59');
+  const rows = ORDERS.filter(o => { const d=new Date(o.created_at); return d>=fromD && d<=toD; });
+  if(!rows.length){ toast('No orders found in that range'); return; }
+  const header = ['Order ID','Date','Time','Customer','Phone','Address','Items','Subtotal','Tax','Total','Status','Rider','OTP'];
+  const csvRows = rows.map(o => [
+    o.id, o.date, o.time, o.customer, o.phone, `"${(o.address||'').replace(/"/g,'""')}"`,
+    `"${o.items.map(i=>i.name+' x'+i.qty).join('; ').replace(/"/g,'""')}"`,
+    o.subtotal, o.tax, o.amount, o.status, o.rider||'—', o.otp||'—'
+  ]);
+  const csv = [header.join(','), ...csvRows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `tildabite_orders_${from}_to_${to}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  closeExportModal();
+  toast('CSV downloaded ✓');
+}
+</script>
+</html>
