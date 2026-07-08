@@ -599,26 +599,77 @@ let lastGeocodedAddress = '';
 
 function scheduleReverseGeocode(lat, lng){
   clearTimeout(geocodeTimer);
-  document.getElementById('loc-address-preview').textContent = '🔎 Finding nearest address…';
-  geocodeTimer = setTimeout(() => reverseGeocode(lat, lng), 600); // debounce while dragging
+  document.getElementById('loc-address-preview').textContent = '🔎 Finding nearest landmark…';
+  geocodeTimer = setTimeout(() => reverseGeocode(lat, lng), 700); // debounce while dragging
+}
+
+// Find the nearest NAMED real-world place (shop, temple, school, hospital, etc.)
+// within a small radius by querying OpenStreetMap's Overpass API. This gives a
+// genuine "50-100m away" landmark instead of just the village/pincode.
+async function findNearestLandmark(lat, lng){
+  const radii = [100, 250, 500, 1000]; // metres — expands only if nothing found nearby
+  const query = (r) => `[out:json][timeout:10];(
+    node(around:${r},${lat},${lng})["name"]["amenity"];
+    node(around:${r},${lat},${lng})["name"]["shop"];
+    node(around:${r},${lat},${lng})["name"]["tourism"];
+    node(around:${r},${lat},${lng})["name"]["leisure"];
+    node(around:${r},${lat},${lng})["name"]["office"];
+    node(around:${r},${lat},${lng})["name"]["healthcare"];
+    node(around:${r},${lat},${lng})["name"]["religion"];
+    way(around:${r},${lat},${lng})["name"]["amenity"];
+    way(around:${r},${lat},${lng})["name"]["building"];
+  );out center 20;`;
+
+  for(const r of radii){
+    try{
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(query(r))
+      });
+      if(!res.ok) continue;
+      const data = await res.json();
+      if(!data.elements || !data.elements.length) continue;
+      let best = null, bestDist = Infinity;
+      for(const el of data.elements){
+        const elat = el.lat ?? el.center?.lat;
+        const elng = el.lon ?? el.center?.lon;
+        if(elat == null || elng == null || !el.tags?.name) continue;
+        const d = distanceKm(lat, lng, elat, elng) * 1000; // metres
+        if(d < bestDist){ bestDist = d; best = el; }
+      }
+      if(best) return { name: best.tags.name, distanceM: Math.round(bestDist) };
+    } catch(e){ console.error('Overpass landmark lookup failed:', e); }
+  }
+  return null;
+}
+
+async function fetchNominatimAddress(lat, lng){
+  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+    headers: { 'Accept-Language': 'en' }
+  });
+  const data = await res.json();
+  if(!data || data.error) return null;
+  return data.address || {};
 }
 
 async function reverseGeocode(lat, lng){
   try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-      headers: { 'Accept-Language': 'en' }
-    });
-    const data = await res.json();
-    if(!data || data.error){ document.getElementById('loc-address-preview').textContent = ''; return; }
-    const a = data.address || {};
-    // Pick the most useful "nearest landmark" style pieces
-    const landmark = a.amenity || a.shop || a.building || a.suburb || a.neighbourhood || '';
-    const road = a.road || a.pedestrian || '';
-    const area = a.suburb || a.neighbourhood || a.village || a.town || a.city_district || '';
-    const city = a.city || a.town || a.state_district || '';
-    const pin = a.postcode || '';
-    const parts = [landmark, road, area, city, pin].filter((v,i,arr)=>v && arr.indexOf(v)===i);
-    const shortAddress = parts.join(', ') || data.display_name;
+    const [landmark, a] = await Promise.all([
+      findNearestLandmark(lat, lng),
+      fetchNominatimAddress(lat, lng)
+    ]);
+    const addr = a || {};
+    const road = addr.road || addr.pedestrian || '';
+    const area = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || '';
+    const city = addr.city || addr.town || addr.state_district || '';
+    const pin = addr.postcode || '';
+
+    const parts = [];
+    if(landmark) parts.push(`Near ${landmark.name} (~${landmark.distanceM}m)`);
+    [road, area, city, pin].forEach(v => { if(v && !parts.includes(v)) parts.push(v); });
+
+    const shortAddress = parts.join(', ');
+    if(!shortAddress){ document.getElementById('loc-address-preview').textContent = ''; return; }
+
     lastGeocodedAddress = shortAddress;
     document.getElementById('loc-address-preview').textContent = '📌 ' + shortAddress;
     // Auto-fill the checkout delivery address field
