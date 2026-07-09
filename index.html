@@ -8,42 +8,45 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
     /* ── TildaBite Light Theme (default) ── */
     --bg:#FFF8F3;--surface:#FFFFFF;--card:#FFFCFA;--border:#F0E8E0;--border2:#E2D5CA;
     --text:#2D1506;--text2:#7A5C4A;--text3:#B8977E;
-    --accent:#E8501A;--accent2:#FF6B35;--accent-bg:rgba(232,80,26,0.08);
+    --accent:#E8501A;--accent2:#FF6B35;--accent-dark:#C43F12;--accent-bg:rgba(var(--accent-rgb),0.08);--accent-rgb:232,80,26;
     --green:#16A34A;--green-bg:rgba(22,163,74,0.09);
-    --blue:#2563EB;--blue-bg:rgba(37,99,235,0.09);
+    --blue:#2563EB;--blue-bg:rgba(138, 138, 138, 0.09);
     --red:#DC2626;--radius:12px;--shadow:0 4px 28px rgba(45,21,6,0.10);
     --gold:#F59E0B;
   }
   body.dark{
-    --bg:#0a0a0a;--surface:#141414;--card:#1c1c1c;--border:#2a2a2a;--border2:#333;
-    --text:#f0f0f0;--text2:#aaa;--text3:#666;
-    --accent:#ff6b35;--accent2:#ff8c55;--accent-bg:rgba(255,107,53,0.15);
-    --green:#22c55e;--green-bg:rgba(34,197,94,0.12);
-    --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.12);
-    --red:#ef4444;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,0.4);
-    --gold:#F59E0B;
+    /* ── TildaBite Midnight Kitchen (warm charcoal + ember + ivory) ── */
+    --bg:#0C0A08;--surface:#17130F;--card:#1E1813;--border:#2B241C;--border2:#3C3226;
+    --text:#F4EBDC;--text2:#B7A88F;--text3:#7C6F5A;
+    --accent:#E86B2C;--accent2:#FF8A4C;--accent-dark:#B8501C;--accent-bg:rgba(232,107,44,0.15);--accent-rgb:232,107,44;
+    --green:#7FB88A;--green-bg:rgba(127,184,138,0.14);
+    --blue:#6FA1C9;--blue-bg:rgba(111,161,201,0.14);
+    --red:#E2726A;--radius:12px;--shadow:0 10px 36px rgba(0,0,0,0.5);
+    --gold:#D9A94E;
   }
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;font-size:15px;transition:background 0.3s,color 0.3s;min-height:100vh;-webkit-font-smoothing:antialiased}
 
   /* NAV */
   nav{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(45,21,6,0.06)}
+  body.dark nav{background:rgba(10,10,10,0.85)}
   .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-  .logo-img{height:42px;width:42px;border-radius:10px;object-fit:contain;background:#fff;padding:2px}
+  .logo-img{height:42px;width:42px;display:block}
   .logo-text{display:flex;flex-direction:column;line-height:1}
-  .logo-name{font-size:18px;font-weight:800;color:#e8501a;letter-spacing:-0.5px}
+  .logo-name{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
   .logo-name span{color:#f59e0b}
   .logo-tag{font-size:9px;color:var(--text3);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-top:1px}
   .nav-right{display:flex;align-items:center;gap:12px}
   .nav-btn{background:none;border:1.5px solid var(--border2);color:var(--text2);padding:7px 16px;border-radius:50px;cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:all 0.2s}
   .nav-btn:hover{border-color:var(--accent);color:var(--accent)}
-  .nav-btn.primary{background:linear-gradient(135deg,#E8501A,#FF6B35);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(232,80,26,0.28)}
-  .nav-btn.primary:hover{background:linear-gradient(135deg,#d4481a,#E8501A);box-shadow:0 4px 16px rgba(232,80,26,0.4)}
+  .nav-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(var(--accent-rgb),0.28)}
+  .nav-btn.primary:hover{background:linear-gradient(135deg,var(--accent-dark),var(--accent));box-shadow:0 4px 16px rgba(var(--accent-rgb),0.4)}
   .cart-btn{position:relative}
   .cart-badge{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
   .theme-toggle{background:none;border:1px solid var(--border2);color:var(--text2);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s}
@@ -55,16 +58,17 @@
 
   /* HERO */
   .hero{background:linear-gradient(160deg,#FFF0E6 0%,#FFF8F3 40%,#FFF5EC 100%);border-bottom:1px solid var(--border);padding:48px 20px 36px;text-align:center;position:relative;overflow:hidden}
+  body.dark .hero{background:radial-gradient(ellipse 680px 380px at 50% -8%, rgba(232,107,44,0.16), transparent 68%), linear-gradient(160deg,#0C0A08 0%,#100D09 55%,#0C0A08 100%)}
   .hero-logo{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px}
-  .hero-logo-img{height:72px;width:72px;border-radius:18px;object-fit:contain;background:#fff;padding:4px;box-shadow:0 4px 20px rgba(255,107,53,0.25)}
+  .hero-logo-img{height:72px;width:72px;display:block;filter:drop-shadow(0 4px 14px rgba(232,107,44,0.35))}
   .hero-logo-text .brand-name{font-size:36px;font-weight:900;letter-spacing:-1.5px;line-height:1}
-  .hero-logo-text .brand-name .tilda{color:#2D1506}
-  .hero-logo-text .brand-name .bite{color:#e8501a}
+  .hero-logo-text .brand-name .tilda{color:var(--text)}
+  .hero-logo-text .brand-name .bite{color:var(--accent)}
   .hero-logo-text .brand-tag{font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
   .hero h1{font-size:28px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;color:var(--text)}
   .hero h1 span{color:var(--accent)}
   .hero p{color:var(--text2);font-size:15px;margin-bottom:24px}
-  .search-bar{max-width:480px;margin:0 auto;display:flex;gap:0;background:#fff;border:1.5px solid var(--border2);border-radius:50px;overflow:hidden;padding:4px;box-shadow:0 4px 20px rgba(232,80,26,0.10)}
+  .search-bar{max-width:480px;margin:0 auto;display:flex;gap:0;background:var(--surface);border:1.5px solid var(--border2);border-radius:50px;overflow:hidden;padding:4px;box-shadow:0 4px 20px rgba(var(--accent-rgb),0.10)}
   .search-bar input{flex:1;background:none;border:none;outline:none;color:var(--text);padding:8px 16px;font-size:14px}
   .search-bar input::placeholder{color:var(--text3)}
   .search-bar button{background:var(--accent);border:none;color:#fff;padding:8px 20px;border-radius:40px;cursor:pointer;font-size:13px;font-weight:600}
@@ -72,22 +76,22 @@
   /* CATEGORIES */
   .categories{padding:20px 20px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
   .categories::-webkit-scrollbar{display:none}
-  .cat-btn{background:#fff;border:1.5px solid var(--border);color:var(--text2);padding:8px 18px;border-radius:50px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:all 0.2s;flex-shrink:0;box-shadow:0 1px 4px rgba(45,21,6,0.06)}
-  .cat-btn:hover,.cat-btn.active{background:rgba(232,80,26,0.08);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .cat-btn{background:var(--surface);border:1.5px solid var(--border);color:var(--text2);padding:8px 18px;border-radius:50px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:all 0.2s;flex-shrink:0;box-shadow:0 1px 4px rgba(45,21,6,0.06)}
+  .cat-btn:hover,.cat-btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
 
   /* MENU GRID */
   .section-title{padding:20px 20px 12px;font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
   .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 20px 100px}
-  .menu-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.2s;cursor:pointer;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
-  .menu-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 28px rgba(232,80,26,0.14)}
+  .menu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.2s;cursor:pointer;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .menu-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 28px rgba(var(--accent-rgb),0.14)}
   .menu-card-img{height:150px;display:flex;align-items:center;justify-content:center;font-size:68px;background:linear-gradient(145deg,#FFF0E6,#FFF8F3)}
   .menu-card-body{padding:14px}
   .menu-card-body h3{font-size:15px;font-weight:600;margin-bottom:4px}
   .menu-card-body p{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.4}
   .menu-card-footer{display:flex;align-items:center;justify-content:space-between}
   .price{font-size:17px;font-weight:800;color:var(--accent)}
-  .add-btn{background:var(--accent);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 3px 10px rgba(232,80,26,0.3)}
-  .add-btn:hover{background:var(--accent2);transform:scale(1.1);box-shadow:0 4px 14px rgba(232,80,26,0.4)}
+  .add-btn{background:var(--accent);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 3px 10px rgba(var(--accent-rgb),0.3)}
+  .add-btn:hover{background:var(--accent2);transform:scale(1.1);box-shadow:0 4px 14px rgba(var(--accent-rgb),0.4)}
   .qty-control{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2px 8px}
   .qty-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;font-weight:700;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
   .qty-num{font-size:13px;font-weight:600;min-width:16px;text-align:center}
@@ -97,7 +101,7 @@
   /* CART DRAWER */
   .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;backdrop-filter:blur(2px)}
   .cart-overlay.open{display:flex;justify-content:flex-end}
-  .cart-drawer{background:#fff;width:100%;max-width:400px;height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border);box-shadow:-8px 0 40px rgba(45,21,6,0.12)}
+  .cart-drawer{background:var(--surface);width:100%;max-width:400px;height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border);box-shadow:-8px 0 40px rgba(45,21,6,0.12)}
   .cart-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
   .cart-header h2{font-size:18px;font-weight:700}
   .close-btn{background:none;border:1px solid var(--border2);color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
@@ -113,17 +117,17 @@
   .cart-footer{padding:16px;border-top:1px solid var(--border)}
   .cart-total-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px}
   .cart-total-row.grand{font-size:16px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-  .checkout-btn{width:100%;background:linear-gradient(135deg,#E8501A,#FF6B35);color:#fff;border:none;padding:15px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 16px rgba(232,80,26,0.3)}
-  .checkout-btn:hover{background:linear-gradient(135deg,#d4481a,#E8501A);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,80,26,0.4)}
+  .checkout-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:15px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3)}
+  .checkout-btn:hover{background:linear-gradient(135deg,var(--accent-dark),var(--accent));transform:translateY(-1px);box-shadow:0 6px 20px rgba(var(--accent-rgb),0.4)}
   .delivery-info{display:flex;align-items:center;gap:8px;background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--green)}
 
   /* AUTH VIEW */
   .auth-container{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#FFF0E6 0%,#FFF8F3 60%,#FFFDF9 100%)}
-  .auth-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(45,21,6,0.10)}
+  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(45,21,6,0.10)}
   .auth-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:20px}
-  .auth-logo img{height:52px;width:52px;border-radius:12px;object-fit:contain;background:#fff;padding:3px}
+  .auth-logo-img{height:52px;width:52px;display:block}
   .auth-logo-name{font-size:22px;font-weight:900;letter-spacing:-0.5px}
-  .auth-logo-name .t{color:#5c3317}.auth-logo-name .b{color:#e8501a}
+  .auth-logo-name .t{color:var(--text)}.auth-logo-name .b{color:var(--accent)}
   .auth-card h2{font-size:20px;font-weight:700;margin-bottom:6px;text-align:center}
   .auth-card p{color:var(--text2);font-size:14px;margin-bottom:28px;text-align:center}
   .form-group{margin-bottom:16px}
@@ -131,7 +135,7 @@
   .form-group input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none;transition:border-color 0.2s}
   .form-group input:focus{border-color:var(--accent)}
   .form-group input::placeholder{color:var(--text3)}
-  .auth-submit{width:100%;background:linear-gradient(135deg,#E8501A,#FF6B35);color:#fff;border:none;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 16px rgba(232,80,26,0.3);transition:all 0.2s}
+  .auth-submit{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3);transition:all 0.2s}
   .auth-submit:hover{background:var(--accent2)}
   .auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
   .auth-switch a{color:var(--accent);text-decoration:none;cursor:pointer;font-weight:500}
@@ -145,6 +149,7 @@
 
   /* BOTTOM NAV */
   .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -4px 20px rgba(45,21,6,0.07)}
+  body.dark .bottom-nav{background:rgba(10,10,10,0.9)}
   .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;cursor:pointer;color:var(--text3);font-size:10px;gap:3px;transition:color 0.2s;border:none;background:none}
   .bottom-nav-item i{font-size:22px}
   .bottom-nav-item.active{color:var(--accent)}
@@ -152,7 +157,7 @@
 
   /* ORDER VIEW */
   .orders-container{padding:20px;max-width:600px;margin:0 auto;padding-bottom:100px}
-  .order-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(45,21,6,0.06);transition:box-shadow 0.2s}
+  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(45,21,6,0.06);transition:box-shadow 0.2s}
   .order-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
   .order-id{font-size:12px;color:var(--text3)}
   .order-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
@@ -169,7 +174,7 @@
   .profile-avatar{width:72px;height:72px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent)}
   .profile-name{font-size:18px;font-weight:700;margin-bottom:4px}
   .profile-email{font-size:13px;color:var(--text2)}
-  .profile-section{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .profile-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
   .profile-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s}
   .profile-item:last-child{border-bottom:none}
   .profile-item:hover{background:var(--surface)}
@@ -179,41 +184,48 @@
 
   /* CHECKOUT */
   .checkout-view{padding:20px;max-width:560px;margin:0 auto;padding-bottom:100px}
-  .checkout-section{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .checkout-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
   .checkout-section h3{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
   .checkout-section h3 i{color:var(--accent)}
   .address-input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none;resize:vertical;min-height:70px;font-family:inherit}
   .address-input:focus{border-color:var(--accent)}
   .pin-loc-btn{width:100%;margin-top:10px;background:var(--accent-bg);border:1.5px dashed var(--accent);color:var(--accent);padding:11px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
-  .pin-loc-btn:hover{background:rgba(232,80,26,0.14)}
+  .pin-loc-btn:hover{background:var(--accent-bg)}
   .pin-loc-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
   .loc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
   .loc-modal-overlay.open{display:flex}
   .loc-modal{background:#fff;color:#1a1a1a;width:100%;max-width:460px;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+  body.dark .loc-modal{background:#141414;color:#f0f0f0}
   .loc-modal h3{font-size:16px;font-weight:800;margin-bottom:2px}
   .loc-modal .loc-sub{font-size:12px;color:#777;margin-bottom:12px}
+  body.dark .loc-modal .loc-sub{color:#999}
   #loc-status-box{display:flex;align-items:center;gap:8px;font-size:13px;color:#444;margin-bottom:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border-left:3px solid #f5a623}
+  body.dark #loc-status-box{background:#332b0f;color:#e8dcb0}
   #loc-status-box.confirmed{background:#e8f5e9;border-left-color:#4caf50}
+  body.dark #loc-status-box.confirmed{background:#0f2e18;color:#a6e6b8}
   #loc-map{height:300px;border-radius:14px;overflow:hidden;border:1px solid #eee}
+  body.dark #loc-map{border-color:#2a2a2a}
   #loc-coords-box{margin-top:10px;padding:10px 14px;background:#f8f8f5;border-radius:10px;font-size:12.5px;color:#333}
+  body.dark #loc-coords-box{background:#1c1c1c;color:#ddd}
   .loc-btn-row{display:flex;gap:10px;margin-top:12px}
   .loc-btn-row button{flex:1;padding:12px;border-radius:10px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
   #loc-locate-btn{background:#eef2ff;color:#4f46e5}
   #loc-confirm-btn{background:#ff5722;color:#fff}
   #loc-cancel-btn{background:none;border:1px solid #ddd;color:#777;width:100%;margin-top:10px;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+  body.dark #loc-cancel-btn{border-color:#333;color:#999}
   .payment-opt{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;transition:border-color 0.2s}
   .payment-opt.selected{border-color:var(--accent)}
   .payment-opt input[type=radio]{accent-color:var(--accent)}
   .payment-label{flex:1}
   .payment-label strong{font-size:14px;display:block}
   .payment-label span{font-size:12px;color:var(--text2)}
-  .pay-btn{width:100%;background:linear-gradient(135deg,#E8501A,#FF6B35);color:#fff;border:none;padding:16px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(232,80,26,0.32);transition:all 0.2s}
-  .pay-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(232,80,26,0.4)}
+  .pay-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:16px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(var(--accent-rgb),0.32);transition:all 0.2s}
+  .pay-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(var(--accent-rgb),0.4)}
 
   /* ── SKELETON LOADING ─────────────────────────────────────── */
   @keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
   .skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 20px 100px}
-  .skeleton-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .skeleton-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
   body.dark .skeleton-card{background:var(--card)}
   .skeleton-img{height:150px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:700px 100%;animation:shimmer 1.4s infinite linear}
   .skeleton-body{padding:14px}
@@ -229,7 +241,8 @@
   .diet-toggle-wrap{display:flex;background:var(--surface);border:1.5px solid var(--border2);border-radius:50px;padding:3px;gap:3px}
   .diet-btn{background:none;border:none;padding:6px 16px;border-radius:40px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.22s;display:flex;align-items:center;gap:6px;white-space:nowrap}
   .diet-btn .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;display:inline-block;flex-shrink:0}
-  .diet-btn.active-all{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(232,80,26,0.28)}
+  .diet-btn.active-all{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(var(--accent-rgb),0.28)}
+  body.dark .cat-btn,body.dark .menu-card,body.dark .cart-drawer,body.dark .auth-card,body.dark .order-card,body.dark .profile-section,body.dark .checkout-section,body.dark .skeleton-card,body.dark nav,body.dark .bottom-nav{box-shadow:var(--shadow)}
   .diet-btn.active-veg{background:#16A34A;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,0.28)}
   .diet-btn.active-nonveg{background:#DC2626;color:#fff;box-shadow:0 2px 8px rgba(220,38,38,0.28)}
   .diet-btn.active-veg .dot,.diet-btn.active-nonveg .dot,.diet-btn.active-all .dot{border-color:#fff}
@@ -237,6 +250,24 @@
 </style>
 <style>.hidden{display:none !important}</style>
 
+<svg style="display:none" aria-hidden="true"><defs><symbol id="tildabite-mark" viewBox="0 0 100 100">
+<circle cx="53" cy="48" r="30" fill="#E86B2C"/>
+<rect x="4" y="52" width="17" height="5" rx="2.5" fill="#E86B2C"/>
+<rect x="9" y="61" width="14" height="5" rx="2.5" fill="#E86B2C"/>
+<rect x="4" y="70" width="17" height="5" rx="2.5" fill="#E86B2C"/>
+<path d="M41 29 Q31 34 32 45 Q33 55 41 64 L46 64 Q40 55 40 46 Q40 36 45 30 Z" fill="#5A3210"/>
+<path d="M65 29 Q75 34 74 45 Q73 55 65 64 L60 64 Q66 55 66 46 Q66 36 61 30 Z" fill="#5A3210"/>
+<rect x="40" y="25" width="27" height="9" rx="4" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6"/>
+<path d="M40 28 Q38 11 53 10 Q68 11 66 28 Q66 30 63 30 L43 30 Q40 30 40 28 Z" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="53" cy="41" r="14" fill="#FFF3E6" stroke="#5A3210" stroke-width="2.4"/>
+<path d="M45 40 Q47.5 37.8 50 40" stroke="#3D2210" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+<circle cx="59" cy="40" r="1.7" fill="#3D2210"/>
+<path d="M46 46 Q53 51 60 45.5" stroke="#3D2210" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+<circle cx="43.5" cy="44" r="2" fill="#E86B2C" opacity="0.35"/>
+<rect x="24" y="82" width="58" height="5.5" rx="2.75" fill="#5A3210"/>
+<path d="M26 82 Q26 56 53 56 Q80 56 80 82 Z" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="53" cy="55" r="2.8" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.4"/>
+</symbol></defs></svg>
 <h2 class="sr-only">TildaBite – food ordering app</h2>
 
 <!-- TOAST -->
@@ -281,7 +312,7 @@
 <!-- NAV -->
 <nav>
   <a class="logo" href="#">
-    <img class="logo-img" src="logo.png" alt="TildaBite Logo">
+    <svg class="logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite Logo"><use href="#tildabite-mark"/></svg>
     <div class="logo-text">
       <div class="logo-name">Tilda<span>Bite</span></div>
       <div class="logo-tag">Your City. Your Food.</div>
@@ -305,7 +336,7 @@
 <div class="view active" id="view-menu">
   <div class="hero">
     <div class="hero-logo">
-      <img class="hero-logo-img" src="logo.png" alt="TildaBite">
+      <svg class="hero-logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite"><use href="#tildabite-mark"/></svg>
       <div class="hero-logo-text">
         <div class="brand-name"><span class="tilda">Tilda</span><span class="bite">Bite</span></div>
         <div class="brand-tag">Your City. Your Food.</div>
@@ -346,7 +377,7 @@
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-logo">
-        <img src="logo.png" alt="TildaBite">
+        <svg class="auth-logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite"><use href="#tildabite-mark"/></svg>
         <div class="auth-logo-name"><span class="t">Tilda</span><span class="b">Bite</span></div>
       </div>
       <h2 id="auth-title">Create account 🚀</h2>
@@ -487,11 +518,9 @@
       <label class="payment-opt selected" onclick="selectPay(this)">
         <input type="radio" name="pay" checked> <div class="payment-label"><strong>Razorpay UPI</strong><span>Pay via UPI, NetBanking, Cards</span></div> <span style="font-size:20px">💳</span>
       </label>
-      <label class="payment-opt" onclick="selectPay(this)">
-        <input type="radio" name="pay"> <div class="payment-label"><strong>Cash on delivery</strong><span>Pay when order arrives</span></div> <span style="font-size:20px">💵</span>
-      </label>
+      <p style="font-size:11.5px;color:var(--text3);margin-top:8px"><i class="ti ti-info-circle" style="margin-right:4px"></i>We currently accept online payments only — no Cash on Delivery.</p>
     </div>
-    <button class="pay-btn" onclick="placeOrder()"><i class="ti ti-lock"></i> Place order securely</button>
+    <button class="pay-btn" id="place-order-btn" onclick="placeOrder()"><i class="ti ti-lock"></i> Place order securely</button>
   </div>
 </div>
 
@@ -502,7 +531,7 @@
     <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
     <div id="loc-status-box">📍 Fetching your location...</div>
     <div id="loc-map"></div>
-    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span><div id="loc-address-preview" style="margin-top:6px;font-size:12.5px;color:#555;font-weight:600"></div></div>
+    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span><div id="loc-address-preview" style="margin-top:6px;font-size:12.5px;color:var(--text2);font-weight:600"></div></div>
     <div class="loc-btn-row">
       <button type="button" id="loc-locate-btn" onclick="locLocateMe()">🎯 Use my location</button>
       <button type="button" id="loc-confirm-btn" onclick="confirmLocationPick()">✅ Confirm this spot</button>
@@ -854,18 +883,21 @@ function scheduleOpenNotification(){
 sb.channel('customer-store-settings')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, () => loadStoreSettings())
   .subscribe();
-let isDark = false;
+let isDark = true;
+document.body.classList.add('dark');
+document.getElementById('theme-icon').className = 'ti ti-sun';
 let authMode = 'signup';
 let currentCat = 'all';
 let dietFilter = 'all'; // 'all' | 'veg' | 'nonveg'
 let isLoggedIn = false;
 let loggedInUser = { name: 'Guest', email: '' };
+let sessionToken = null;
 const SESSION_KEY = 'tildabite_session';
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function saveSession(acc){
   localStorage.setItem(SESSION_KEY, JSON.stringify({
-    id: acc.id, name: acc.name, email: acc.email, phone: acc.phone,
+    token: acc.token, id: acc.id, name: acc.name, email: acc.email, phone: acc.phone,
     expiresAt: Date.now() + SESSION_DURATION_MS
   }));
 }
@@ -882,6 +914,7 @@ function restoreSession(){
     return;
   }
   isLoggedIn = true;
+  sessionToken = saved.token;
   loggedInUser = { id: saved.id, name: saved.name, email: saved.email, phone: saved.phone };
   document.getElementById('auth-nav-label').textContent = saved.name.split(' ')[0];
   document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
@@ -1111,38 +1144,85 @@ async function placeOrder(){
   if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please pin your exact location on the map — we only deliver within 7 km'); openLocationPicker(); return; }
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   if(!keys.length){ showToast('Your cart is empty'); return; }
-  const otp = String(Math.floor(1000 + Math.random() * 9000));
-  const sub = keys.reduce((s,k)=>{const i=MENU.find(m=>m.id==k);return s+i.price*cart[k];},0);
-  const tax = Math.round(sub*0.05);
-  const itemsPayload = keys.map(k=>{ const i=MENU.find(m=>m.id==k); return {id:i.id, name:i.name, qty:cart[k], price:i.price}; });
+  // Only send item id + qty — server looks up the real price itself,
+  // so a tampered client can no longer change what gets charged.
+  const itemsPayload = keys.map(k=>({ id: Number(k), qty: cart[k] }));
 
-  const { data, error } = await sb.from('orders').insert({
-    user_id: loggedInUser.id,
-    customer_name: loggedInUser.name,
-    customer_phone: loggedInUser.phone || '—',
-    address: address,
-    items: itemsPayload,
-    subtotal: sub,
-    tax: tax,
-    total: sub + tax,
-    otp: otp,
-    status: 'pending',
-    lat: deliveryLat,
-    lng: deliveryLng
-  }).select().single();
+  const payBtn = document.getElementById('place-order-btn');
+  if(payBtn){ payBtn.disabled = true; payBtn.textContent = 'Please wait...'; }
 
-  if(error){ showToast('❌ Order failed: '+error.message); return; }
+  // Step 1: ask our server (Edge Function) to price the cart for real
+  // and open a Razorpay order for that amount.
+  const { data: payData, error: payErr } = await sb.functions.invoke('create-payment-order', {
+    body: { token: sessionToken, items: itemsPayload, address, lat: deliveryLat, lng: deliveryLng }
+  });
 
-  showToast('Order placed! Your delivery OTP is: '+otp+' 🎉');
-  window._lastOtp = otp;
-  window._lastOrderId = data.id;
-  cart={};updateCartUI();
-  deliveryLat = null; deliveryLng = null;
-  document.getElementById('pin-loc-status').style.display = 'none';
-  await loadSharedMenu(); // stock/sold already decremented in DB via trigger
-  applyFilters(document.getElementById('search-input').value.toLowerCase());
-  await renderOrders();
-  setTimeout(()=>{showView('orders');setActive(document.querySelectorAll('.bottom-nav-item')[1]);},1200);
+  if(payErr || payData?.error){
+    const msg = payData?.error === 'TOO_MANY_ATTEMPTS'
+      ? 'Too many payment attempts — please wait a few minutes and try again'
+      : (payData?.error || payErr.message || 'Could not start payment');
+    showToast('❌ '+msg);
+    if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+    return;
+  }
+
+  // Step 2: open Razorpay Checkout — customer pays here (UPI/card/etc.)
+  const rzp = new Razorpay({
+    key: payData.key_id,
+    amount: payData.amount,
+    currency: payData.currency,
+    order_id: payData.razorpay_order_id,
+    name: 'TildaBite',
+    description: 'Food order payment',
+    prefill: { name: loggedInUser?.name || '', contact: loggedInUser?.phone || '', email: loggedInUser?.email || '' },
+    theme: { color: '#F07C1A' },
+    handler: async function(response){
+      // Step 3: payment succeeded on Razorpay's side — verify signature
+      // server-side and create the real order.
+      const { data: verifyData, error: verifyErr } = await sb.functions.invoke('verify-payment', {
+        body: {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        }
+      });
+
+      if(verifyErr || verifyData?.error || !verifyData?.success){
+        showToast('❌ Payment received but confirmation failed — contact support with payment ID: '+response.razorpay_payment_id);
+        if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+        return;
+      }
+
+      const order = verifyData.order;
+      const otp = order.otp;
+      showToast('Order placed! Your delivery OTP is: '+otp+' 🎉');
+      window._lastOtp = otp;
+      window._lastOrderId = order.id;
+      cart={};updateCartUI();
+      deliveryLat = null; deliveryLng = null;
+      document.getElementById('pin-loc-status').style.display = 'none';
+      if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+      await loadSharedMenu(); // stock/sold already decremented in DB via trigger
+      applyFilters(document.getElementById('search-input').value.toLowerCase());
+      await renderOrders();
+      setTimeout(()=>{showView('orders');setActive(document.querySelectorAll('.bottom-nav-item')[1]);},1200);
+    },
+    modal: {
+      ondismiss: function(){
+        // customer closed the Razorpay popup without paying
+        if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+        showToast('Payment cancelled');
+      }
+    }
+  });
+
+  rzp.on('payment.failed', function(){
+    showToast('❌ Payment failed — please try again');
+    if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+  });
+
+  if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+  rzp.open();
 }
 
 async function renderOrders(){
@@ -1217,7 +1297,7 @@ const TERMS_HTML = `
   <p>You must provide accurate and complete information (name, email, phone number) when creating an account. You are responsible for keeping your login credentials confidential and for all activity under your account.</p>
 
   <h4 style="margin:16px 0 6px;color:var(--text)">2. Orders & Payments</h4>
-  <p>All orders placed through the Platform are subject to acceptance and item availability. Prices, taxes, and delivery charges are displayed at checkout before you confirm payment. Payment can be made via the methods offered on the Platform (UPI, card, cash on delivery, etc., where applicable).</p>
+  <p>All orders placed through the Platform are subject to acceptance and item availability. Prices, taxes, and delivery charges are displayed at checkout before you confirm payment. We currently accept online payments only (UPI, NetBanking, and cards via Razorpay) — Cash on Delivery is not available.</p>
 
   <h4 style="margin:16px 0 6px;color:var(--text)">3. Delivery</h4>
   <p>Estimated delivery/preparation times are approximate and may vary due to weather, traffic, order volume, or circumstances beyond our control. We are not liable for delays caused by factors outside our reasonable control.</p>
@@ -1318,10 +1398,12 @@ async function handleAuth(){
     if(!pass || pass.length < 6){ showToast('Password must be at least 6 characters'); return; }
     if(!name){ showToast('Please enter your full name'); return; }
     if(!document.getElementById('signup-privacy-check').checked){ showToast('Please agree to the Terms & Conditions and Privacy Policy to continue'); return; }
-    const { data: existing } = await sb.from('customers').select('id').eq('email', email).maybeSingle();
-    if(existing){ showToast('Account already exists. Please sign in.'); return; }
-    const { error } = await sb.from('customers').insert({ name, email, phone, password: pass });
-    if(error){ showToast('❌ '+error.message); return; }
+    const { error } = await sb.rpc('customer_signup', { p_name: name, p_email: email, p_phone: phone, p_password: pass });
+    if(error){
+      if(error.message.includes('ACCOUNT_EXISTS')){ showToast('Account already exists. Please sign in.'); }
+      else { showToast('❌ '+error.message); }
+      return;
+    }
     showToast('Account created! Please sign in now.');
     setTimeout(()=>{ toggleAuth(); document.getElementById('login-identifier').value = email; }, 800);
     return;
@@ -1330,16 +1412,16 @@ async function handleAuth(){
   const pass       = document.getElementById('login-pass').value;
   if(!identifier){ showToast('Please enter your email or mobile number'); return; }
   if(!pass){ showToast('Please enter your password'); return; }
-  let acc = null;
-  const { data: byEmail } = await sb.from('customers').select('*').eq('email', identifier).maybeSingle();
-  acc = byEmail;
-  if(!acc){
-    const { data: byPhone } = await sb.from('customers').select('*').eq('phone', identifier).maybeSingle();
-    acc = byPhone;
+  const { data: rows, error: loginErr } = await sb.rpc('customer_login', { p_identifier: identifier, p_password: pass });
+  const acc = rows && rows[0];
+  if(loginErr || !acc){
+    if(loginErr && loginErr.message.includes('TOO_MANY_ATTEMPTS')){ showToast('Too many failed attempts. Please try again in 7 minutes.'); }
+    else if(loginErr && loginErr.message.includes('WRONG_PASSWORD')){ showToast('Incorrect password. Please try again.'); document.getElementById('login-pass').value=''; }
+    else { showToast('No account found with that email or mobile number.'); }
+    return;
   }
-  if(!acc){ showToast('No account found with that email or mobile number.'); return; }
-  if(acc.password !== pass){ showToast('Incorrect password. Please try again.'); document.getElementById('login-pass').value=''; return; }
   isLoggedIn = true;
+  sessionToken = acc.token;
   loggedInUser = { id: acc.id, name: acc.name, email: acc.email, phone: acc.phone };
   saveSession(acc);
   document.getElementById('auth-nav-label').textContent = acc.name.split(' ')[0];
@@ -1376,7 +1458,9 @@ function handleAuthNavClick(){
 }
 
 function signOut(){
+  if(sessionToken){ sb.rpc('logout', { p_token: sessionToken }); }
   isLoggedIn = false;
+  sessionToken = null;
   loggedInUser = { name: 'Guest', email: '' };
   clearSession();
   if(myOrdersChannel){ sb.removeChannel(myOrdersChannel); myOrdersChannel = null; }
