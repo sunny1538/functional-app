@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TildaBite — Order Food Online</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    /* ── TildaBite Light Theme (default) ── */
+    --bg:#FFF8F3;--surface:#FFFFFF;--card:#FFFCFA;--border:#F0E8E0;--border2:#E2D5CA;
+    --text:#2D1506;--text2:#7A5C4A;--text3:#B8977E;
+    --accent:#E8501A;--accent2:#FF6B35;--accent-dark:#C43F12;--accent-bg:rgba(var(--accent-rgb),0.08);--accent-rgb:232,80,26;
+    --green:#16A34A;--green-bg:rgba(22,163,74,0.09);
+    --blue:#2563EB;--blue-bg:rgba(37,99,235,0.09);
+    --red:#DC2626;--radius:12px;--shadow:0 4px 28px rgba(45,21,6,0.10);
+    --gold:#F59E0B;
+  }
+  body.dark{
+    /* ── TildaBite Midnight Kitchen (warm charcoal + ember + ivory) ── */
+    --bg:#0C0A08;--surface:#17130F;--card:#1E1813;--border:#2B241C;--border2:#3C3226;
+    --text:#F4EBDC;--text2:#B7A88F;--text3:#7C6F5A;
+    --accent:#E86B2C;--accent2:#FF8A4C;--accent-dark:#B8501C;--accent-bg:rgba(232,107,44,0.15);--accent-rgb:232,107,44;
+    --green:#7FB88A;--green-bg:rgba(127,184,138,0.14);
+    --blue:#6FA1C9;--blue-bg:rgba(111,161,201,0.14);
+    --red:#E2726A;--radius:12px;--shadow:0 10px 36px rgba(0,0,0,0.5);
+    --gold:#D9A94E;
+  }
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;font-size:15px;transition:background 0.3s,color 0.3s;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+  /* NAV */
+  nav{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(45,21,6,0.06)}
+  body.dark nav{background:rgba(10,10,10,0.85)}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .logo-img{height:42px;width:42px;display:block}
+  .logo-text{display:flex;flex-direction:column;line-height:1}
+  .logo-name{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+  .logo-name span{color:#f59e0b}
+  .logo-tag{font-size:9px;color:var(--text3);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .nav-btn{background:none;border:1.5px solid var(--border2);color:var(--text2);padding:7px 16px;border-radius:50px;cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+  .nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .nav-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(var(--accent-rgb),0.28)}
+  .nav-btn.primary:hover{background:linear-gradient(135deg,var(--accent-dark),var(--accent));box-shadow:0 4px 16px rgba(var(--accent-rgb),0.4)}
+  .cart-btn{position:relative}
+  .cart-badge{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .theme-toggle{background:none;border:1px solid var(--border2);color:var(--text2);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* VIEWS */
+  .view{display:none}
+  .view.active{display:block}
+
+  /* HERO */
+  .hero{background:linear-gradient(160deg,#FFF0E6 0%,#FFF8F3 40%,#FFF5EC 100%);border-bottom:1px solid var(--border);padding:48px 20px 36px;text-align:center;position:relative;overflow:hidden}
+  body.dark .hero{background:radial-gradient(ellipse 680px 380px at 50% -8%, rgba(232,107,44,0.16), transparent 68%), linear-gradient(160deg,#0C0A08 0%,#100D09 55%,#0C0A08 100%)}
+  .hero-logo{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px}
+  .hero-logo-img{height:72px;width:72px;display:block;filter:drop-shadow(0 4px 14px rgba(232,107,44,0.35))}
+  .hero-logo-text .brand-name{font-size:36px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+  .hero-logo-text .brand-name .tilda{color:var(--text)}
+  .hero-logo-text .brand-name .bite{color:var(--accent)}
+  .hero-logo-text .brand-tag{font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+  .hero h1{font-size:28px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;color:var(--text)}
+  .hero h1 span{color:var(--accent)}
+  .hero p{color:var(--text2);font-size:15px;margin-bottom:24px}
+  .search-bar{max-width:480px;margin:0 auto;display:flex;gap:0;background:var(--surface);border:1.5px solid var(--border2);border-radius:50px;overflow:hidden;padding:4px;box-shadow:0 4px 20px rgba(var(--accent-rgb),0.10)}
+  .search-bar input{flex:1;background:none;border:none;outline:none;color:var(--text);padding:8px 16px;font-size:14px}
+  .search-bar input::placeholder{color:var(--text3)}
+  .search-bar button{background:var(--accent);border:none;color:#fff;padding:8px 20px;border-radius:40px;cursor:pointer;font-size:13px;font-weight:600}
+
+  /* CATEGORIES */
+  .categories{padding:20px 20px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .categories::-webkit-scrollbar{display:none}
+  .cat-btn{background:var(--surface);border:1.5px solid var(--border);color:var(--text2);padding:8px 18px;border-radius:50px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:all 0.2s;flex-shrink:0;box-shadow:0 1px 4px rgba(45,21,6,0.06)}
+  .cat-btn:hover,.cat-btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+
+  /* MENU GRID */
+  .section-title{padding:20px 20px 12px;font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+  .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 20px 100px}
+  .menu-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.2s;cursor:pointer;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .menu-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 28px rgba(var(--accent-rgb),0.14)}
+  .menu-card-img{height:150px;display:flex;align-items:center;justify-content:center;font-size:68px;background:linear-gradient(145deg,#FFF0E6,#FFF8F3)}
+  .menu-card-body{padding:14px}
+  .menu-card-body h3{font-size:15px;font-weight:600;margin-bottom:4px}
+  .menu-card-body p{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.4}
+  .menu-card-footer{display:flex;align-items:center;justify-content:space-between}
+  .price{font-size:17px;font-weight:800;color:var(--accent)}
+  .add-btn{background:var(--accent);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 3px 10px rgba(var(--accent-rgb),0.3)}
+  .add-btn:hover{background:var(--accent2);transform:scale(1.1);box-shadow:0 4px 14px rgba(var(--accent-rgb),0.4)}
+  .qty-control{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2px 8px}
+  .qty-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;font-weight:700;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+  .qty-num{font-size:13px;font-weight:600;min-width:16px;text-align:center}
+  .veg-tag{display:inline-block;background:rgba(22,163,74,0.09);color:#16A34A;border:1px solid rgba(22,163,74,0.3);border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:6px;letter-spacing:0.5px}
+  .nonveg-tag{display:inline-block;background:rgba(220,38,38,0.08);color:#DC2626;border:1px solid rgba(220,38,38,0.25);border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:6px;letter-spacing:0.5px}
+
+  /* CART DRAWER */
+  .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;backdrop-filter:blur(2px)}
+  .cart-overlay.open{display:flex;justify-content:flex-end}
+  .cart-drawer{background:var(--surface);width:100%;max-width:400px;height:100%;display:flex;flex-direction:column;border-left:1px solid var(--border);box-shadow:-8px 0 40px rgba(45,21,6,0.12)}
+  .cart-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .cart-header h2{font-size:18px;font-weight:700}
+  .close-btn{background:none;border:1px solid var(--border2);color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+  .close-btn:hover{border-color:var(--red);color:var(--red)}
+  .cart-items{flex:1;overflow-y:auto;padding:16px}
+  .cart-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .cart-item-emoji{font-size:32px;width:48px;text-align:center}
+  .cart-item-info{flex:1}
+  .cart-item-info h4{font-size:14px;font-weight:600;margin-bottom:2px}
+  .cart-item-info p{font-size:12px;color:var(--text2)}
+  .cart-empty{text-align:center;padding:60px 20px;color:var(--text3)}
+  .cart-empty i{font-size:48px;margin-bottom:12px;display:block}
+  .cart-footer{padding:16px;border-top:1px solid var(--border)}
+  .cart-total-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px}
+  .cart-total-row.grand{font-size:16px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+  .checkout-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:15px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3)}
+  .checkout-btn:hover{background:linear-gradient(135deg,var(--accent-dark),var(--accent));transform:translateY(-1px);box-shadow:0 6px 20px rgba(var(--accent-rgb),0.4)}
+  .delivery-info{display:flex;align-items:center;gap:8px;background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--green)}
+
+  /* AUTH VIEW */
+  .auth-container{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#FFF0E6 0%,#FFF8F3 60%,#FFFDF9 100%)}
+  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(45,21,6,0.10)}
+  .auth-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:20px}
+  .auth-logo-img{height:52px;width:52px;display:block}
+  .auth-logo-name{font-size:22px;font-weight:900;letter-spacing:-0.5px}
+  .auth-logo-name .t{color:var(--text)}.auth-logo-name .b{color:var(--accent)}
+  .auth-card h2{font-size:20px;font-weight:700;margin-bottom:6px;text-align:center}
+  .auth-card p{color:var(--text2);font-size:14px;margin-bottom:28px;text-align:center}
+  .form-group{margin-bottom:16px}
+  .form-group label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
+  .form-group input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none;transition:border-color 0.2s}
+  .form-group input:focus{border-color:var(--accent)}
+  .form-group input::placeholder{color:var(--text3)}
+  .auth-submit{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3);transition:all 0.2s}
+  .auth-submit:hover{background:var(--accent2)}
+  .auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
+  .auth-switch a{color:var(--accent);text-decoration:none;cursor:pointer;font-weight:500}
+  .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:12px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#2D1506;border:none;color:#fff;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:999;transition:transform 0.32s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(45,21,6,0.25)}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast i{color:#4ADE80}
+
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -4px 20px rgba(45,21,6,0.07)}
+  body.dark .bottom-nav{background:rgba(10,10,10,0.9)}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;cursor:pointer;color:var(--text3);font-size:10px;gap:3px;transition:color 0.2s;border:none;background:none}
+  .bottom-nav-item i{font-size:22px}
+  .bottom-nav-item.active{color:var(--accent)}
+  .bottom-nav-item:hover{color:var(--accent)}
+
+  /* ORDER VIEW */
+  .orders-container{padding:20px;max-width:600px;margin:0 auto;padding-bottom:100px}
+  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(45,21,6,0.06);transition:box-shadow 0.2s}
+  .order-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .order-id{font-size:12px;color:var(--text3)}
+  .order-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .status-delivered{background:var(--green-bg);color:var(--green)}
+  .status-preparing{background:rgba(251,191,36,0.15);color:#fbbf24}
+  .status-otw{background:var(--blue-bg);color:var(--blue)}
+  .order-items-list{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.8}
+  .order-footer{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)}
+  .reorder-btn{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600}
+
+  /* PROFILE */
+  .profile-container{padding:20px;max-width:500px;margin:0 auto;padding-bottom:100px}
+  .profile-header{background:linear-gradient(145deg,#FFF0E6,#FFF8F3);border:1px solid var(--border);border-radius:18px;padding:28px;text-align:center;margin-bottom:16px}
+  .profile-avatar{width:72px;height:72px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent)}
+  .profile-name{font-size:18px;font-weight:700;margin-bottom:4px}
+  .profile-email{font-size:13px;color:var(--text2)}
+  .profile-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .profile-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s}
+  .profile-item:last-child{border-bottom:none}
+  .profile-item:hover{background:var(--surface)}
+  .profile-item i{font-size:18px;color:var(--text3);width:24px}
+  .profile-item span{flex:1;font-size:14px}
+  .profile-item .chevron{color:var(--text3);font-size:14px}
+
+  /* CHECKOUT */
+  .checkout-view{padding:20px;max-width:560px;margin:0 auto;padding-bottom:100px}
+  .checkout-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  .checkout-section h3{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .checkout-section h3 i{color:var(--accent)}
+  .address-input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-size:14px;outline:none;resize:vertical;min-height:70px;font-family:inherit}
+  .address-input:focus{border-color:var(--accent)}
+  .pin-loc-btn{width:100%;margin-top:10px;background:var(--accent-bg);border:1.5px dashed var(--accent);color:var(--accent);padding:11px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+  .pin-loc-btn:hover{background:var(--accent-bg)}
+  .pin-loc-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
+  .loc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
+  .loc-modal-overlay.open{display:flex}
+  .loc-modal{background:#fff;color:#1a1a1a;width:100%;max-width:460px;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+  body.dark .loc-modal{background:#141414;color:#f0f0f0}
+  .loc-modal h3{font-size:16px;font-weight:800;margin-bottom:2px}
+  .loc-modal .loc-sub{font-size:12px;color:#777;margin-bottom:12px}
+  body.dark .loc-modal .loc-sub{color:#999}
+  #loc-status-box{display:flex;align-items:center;gap:8px;font-size:13px;color:#444;margin-bottom:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border-left:3px solid #f5a623}
+  body.dark #loc-status-box{background:#332b0f;color:#e8dcb0}
+  #loc-status-box.confirmed{background:#e8f5e9;border-left-color:#4caf50}
+  body.dark #loc-status-box.confirmed{background:#0f2e18;color:#a6e6b8}
+  #loc-map{height:300px;border-radius:14px;overflow:hidden;border:1px solid #eee}
+  body.dark #loc-map{border-color:#2a2a2a}
+  #loc-coords-box{margin-top:10px;padding:10px 14px;background:#f8f8f5;border-radius:10px;font-size:12.5px;color:#333}
+  body.dark #loc-coords-box{background:#1c1c1c;color:#ddd}
+  .loc-btn-row{display:flex;gap:10px;margin-top:12px}
+  .loc-btn-row button{flex:1;padding:12px;border-radius:10px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
+  #loc-locate-btn{background:#eef2ff;color:#4f46e5}
+  #loc-confirm-btn{background:#ff5722;color:#fff}
+  #loc-cancel-btn{background:none;border:1px solid #ddd;color:#777;width:100%;margin-top:10px;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+  body.dark #loc-cancel-btn{border-color:#333;color:#999}
+  .payment-opt{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;transition:border-color 0.2s}
+  .payment-opt.selected{border-color:var(--accent)}
+  .payment-opt input[type=radio]{accent-color:var(--accent)}
+  .payment-label{flex:1}
+  .payment-label strong{font-size:14px;display:block}
+  .payment-label span{font-size:12px;color:var(--text2)}
+  .pay-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:16px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(var(--accent-rgb),0.32);transition:all 0.2s}
+  .pay-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(var(--accent-rgb),0.4)}
+
+  /* ── SKELETON LOADING ─────────────────────────────────────── */
+  @keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
+  .skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:0 20px 100px}
+  .skeleton-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(45,21,6,0.05)}
+  body.dark .skeleton-card{background:var(--card)}
+  .skeleton-img{height:150px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:700px 100%;animation:shimmer 1.4s infinite linear}
+  .skeleton-body{padding:14px}
+  .skeleton-line{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:700px 100%;animation:shimmer 1.4s infinite linear;margin-bottom:10px}
+  .skeleton-line.short{width:55%}
+  .skeleton-line.tag{width:38%;height:10px}
+  .skeleton-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .skeleton-price{width:48px;height:20px;border-radius:6px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:700px 100%;animation:shimmer 1.4s infinite linear}
+  .skeleton-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:700px 100%;animation:shimmer 1.4s infinite linear}
+
+  /* ── VEG / NON-VEG TOGGLE ─────────────────────────────────── */
+  .diet-filter-bar{padding:12px 20px 4px;display:flex;align-items:center;gap:10px}
+  .diet-toggle-wrap{display:flex;background:var(--surface);border:1.5px solid var(--border2);border-radius:50px;padding:3px;gap:3px}
+  .diet-btn{background:none;border:none;padding:6px 16px;border-radius:40px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.22s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .diet-btn .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;display:inline-block;flex-shrink:0}
+  .diet-btn.active-all{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(var(--accent-rgb),0.28)}
+  body.dark .cat-btn,body.dark .menu-card,body.dark .cart-drawer,body.dark .auth-card,body.dark .order-card,body.dark .profile-section,body.dark .checkout-section,body.dark .skeleton-card,body.dark nav,body.dark .bottom-nav{box-shadow:var(--shadow)}
+  .diet-btn.active-veg{background:#16A34A;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,0.28)}
+  .diet-btn.active-nonveg{background:#DC2626;color:#fff;box-shadow:0 2px 8px rgba(220,38,38,0.28)}
+  .diet-btn.active-veg .dot,.diet-btn.active-nonveg .dot,.diet-btn.active-all .dot{border-color:#fff}
+  .diet-count-badge{font-size:11px;font-weight:600;background:var(--accent-bg);color:var(--accent);border-radius:20px;padding:2px 8px;margin-left:auto}
+</style>
+<style>.hidden{display:none !important}</style>
+
+<svg style="display:none" aria-hidden="true"><defs><symbol id="tildabite-mark" viewBox="0 0 100 100">
+<circle cx="53" cy="48" r="30" fill="#E86B2C"/>
+<rect x="4" y="52" width="17" height="5" rx="2.5" fill="#E86B2C"/>
+<rect x="9" y="61" width="14" height="5" rx="2.5" fill="#E86B2C"/>
+<rect x="4" y="70" width="17" height="5" rx="2.5" fill="#E86B2C"/>
+<path d="M41 29 Q31 34 32 45 Q33 55 41 64 L46 64 Q40 55 40 46 Q40 36 45 30 Z" fill="#5A3210"/>
+<path d="M65 29 Q75 34 74 45 Q73 55 65 64 L60 64 Q66 55 66 46 Q66 36 61 30 Z" fill="#5A3210"/>
+<rect x="40" y="25" width="27" height="9" rx="4" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6"/>
+<path d="M40 28 Q38 11 53 10 Q68 11 66 28 Q66 30 63 30 L43 30 Q40 30 40 28 Z" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="53" cy="41" r="14" fill="#FFF3E6" stroke="#5A3210" stroke-width="2.4"/>
+<path d="M45 40 Q47.5 37.8 50 40" stroke="#3D2210" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+<circle cx="59" cy="40" r="1.7" fill="#3D2210"/>
+<path d="M46 46 Q53 51 60 45.5" stroke="#3D2210" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+<circle cx="43.5" cy="44" r="2" fill="#E86B2C" opacity="0.35"/>
+<rect x="24" y="82" width="58" height="5.5" rx="2.75" fill="#5A3210"/>
+<path d="M26 82 Q26 56 53 56 Q80 56 80 82 Z" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="53" cy="55" r="2.8" fill="#FFFFFF" stroke="#5A3210" stroke-width="2.4"/>
+</symbol></defs></svg>
+<h2 class="sr-only">TildaBite – food ordering app</h2>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="ti ti-circle-check"></i><span id="toast-msg">Added to cart!</span></div>
+
+<!-- STORE CLOSED OVERLAY -->
+<div id="closed-overlay" class="hidden" style="position:fixed;inset:0;background:linear-gradient(160deg,var(--bg),var(--card));z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="max-width:420px;width:100%;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 28px;box-shadow:0 20px 60px rgba(45,21,6,0.12)">
+    <div style="font-size:56px;margin-bottom:6px">😴</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
+      <i class="ti ti-clock" style="font-size:13px"></i> We'll be available soon
+    </div>
+    <h2 style="font-size:21px;font-weight:800;margin-bottom:10px">We're closed right now</h2>
+    <p style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:4px">Our kitchen is currently closed.<br>We'll be back and cooking fresh at <strong id="closed-opening-time">10:00 AM</strong>.</p>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:20px">Thanks for your patience — see you soon! 🍽️</p>
+
+    <div id="closed-countdown" style="background:var(--accent-bg);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Opening in</div>
+      <div id="closed-countdown-text" style="font-size:22px;font-weight:800;color:var(--accent)">—</div>
+    </div>
+
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px">
+      <i class="ti ti-clock" style="font-size:14px;vertical-align:-2px"></i>
+      Today's hours: <strong id="closed-hours-text">10:00 AM – 11:00 PM</strong>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="nav-btn primary" style="width:100%;justify-content:center;padding:12px" onclick="requestOpenNotify()"><i class="ti ti-bell-ringing"></i> Notify me when open</button>
+      <button class="nav-btn" id="closed-call-btn" style="width:100%;justify-content:center;padding:12px;display:none" onclick="callRestaurant()"><i class="ti ti-phone"></i> Call us to order</button>
+      <button class="nav-btn" style="width:100%;justify-content:center;padding:12px" onclick="browseMenuReadOnly()"><i class="ti ti-menu-2"></i> Browse menu (can't order yet)</button>
+    </div>
+  </div>
+</div>
+
+<!-- BROWSING-WHILE-CLOSED BANNER -->
+<div id="closed-banner" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:400;background:var(--accent);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:600">
+  <i class="ti ti-lock" style="font-size:15px"></i>
+  <span>We'll be available soon — you're browsing only</span>
+  <button onclick="showClosedOverlay()" style="background:rgba(255,255,255,0.25);border:none;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">Back</button>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <svg class="logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite Logo"><use href="#tildabite-mark"/></svg>
+    <div class="logo-text">
+      <div class="logo-name">Tilda<span>Bite</span></div>
+      <div class="logo-tag">Your City. Your Food.</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="ti ti-moon" id="theme-icon"></i></button>
+    <button class="nav-btn cart-btn" onclick="openCart()"><i class="ti ti-shopping-cart"></i> Cart <span class="cart-badge" id="cart-badge" style="display:none">0</span></button>
+    <button class="nav-btn primary" id="auth-nav-btn" onclick="handleAuthNavClick()"><i class="ti ti-user"></i> <span id="auth-nav-label">Sign in</span></button>
+  </div>
+</nav>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bottom-nav-item active" onclick="showView('menu');setActive(this)"><i class="ti ti-home"></i>Menu</button>
+  <button class="bottom-nav-item" onclick="if(!isLoggedIn){requireAuth('orders');return;}renderOrders();showView('orders');setActive(this)"><i class="ti ti-package"></i>Orders</button>
+  <button class="bottom-nav-item" onclick="if(!isLoggedIn){requireAuth('profile');return;}showView('profile');setActive(this)"><i class="ti ti-user-circle"></i>Profile</button>
+</div>
+
+<!-- ============ MENU VIEW ============ -->
+<div class="view active" id="view-menu">
+  <div class="hero">
+    <div class="hero-logo">
+      <svg class="hero-logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite"><use href="#tildabite-mark"/></svg>
+      <div class="hero-logo-text">
+        <div class="brand-name"><span class="tilda">Tilda</span><span class="bite">Bite</span></div>
+        <div class="brand-tag">Your City. Your Food.</div>
+      </div>
+    </div>
+    <h1>Hot food, <span>fast delivery</span> 🔥</h1>
+    <p>Authentic Indian flavours delivered to your door</p>
+    <div class="search-bar">
+      <input type="text" placeholder="Search biryani, burger, coffee…" id="search-input" oninput="filterMenu()">
+      <button><i class="ti ti-search"></i></button>
+    </div>
+  </div>
+  <div class="categories" id="categories">
+    <button class="cat-btn active" onclick="filterCat('all',this)">🍽️ All</button>
+    <button class="cat-btn" onclick="filterCat('biryani',this)">🍛 Biryani</button>
+    <button class="cat-btn" onclick="filterCat('chicken',this)">🍗 Chicken</button>
+    <button class="cat-btn" onclick="filterCat('veg',this)">🌿 Veg</button>
+    <button class="cat-btn" onclick="filterCat('snacks',this)">🍔 Snacks</button>
+    <button class="cat-btn" onclick="filterCat('drinks',this)">🥤 Drinks</button>
+  </div>
+  <!-- VEG / NON-VEG FILTER -->
+  <div class="diet-filter-bar">
+    <div class="diet-toggle-wrap">
+      <button class="diet-btn active-all" id="diet-all" onclick="setDiet('all')"><span class="dot" style="background:var(--accent);border-color:var(--accent)"></span>All</button>
+      <button class="diet-btn" id="diet-veg" onclick="setDiet('veg')"><span class="dot" style="background:#16A34A;border-color:#16A34A"></span>Pure Veg</button>
+      <button class="diet-btn" id="diet-nonveg" onclick="setDiet('nonveg')"><span class="dot" style="background:#DC2626;border-color:#DC2626"></span>Non-Veg</button>
+    </div>
+    <span class="diet-count-badge" id="diet-count-badge">16 items</span>
+  </div>
+  <div class="section-title" id="menu-section-title">All Items</div>
+  <!-- Skeleton loader shown while menu loads -->
+  <div class="skeleton-grid" id="skeleton-grid"></div>
+  <div class="menu-grid" id="menu-grid" style="display:none"></div>
+</div>
+
+<!-- ============ AUTH VIEW ============ -->
+<div class="view" id="view-auth">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <svg class="auth-logo-img" viewBox="0 0 100 100" role="img" aria-label="TildaBite"><use href="#tildabite-mark"/></svg>
+        <div class="auth-logo-name"><span class="t">Tilda</span><span class="b">Bite</span></div>
+      </div>
+      <h2 id="auth-title">Create account 🚀</h2>
+      <p id="auth-sub">Join TildaBite – your favourite food, delivered fast</p>
+
+      <div id="signup-fields">
+        <div class="form-group"><label>Email</label><input type="email" placeholder="you@example.com" id="auth-email"></div>
+        <div class="form-group"><label>Password <span style="font-size:11px;color:var(--text3)">(min. 6 characters)</span></label><input type="password" placeholder="••••••••" id="auth-pass"></div>
+        <div id="auth-name-group" class="form-group"><label>Full name</label><input type="text" placeholder="Rahul Sharma" id="auth-name"></div>
+        <div id="auth-phone-group" class="form-group"><label>Phone number</label><input type="tel" placeholder="+91 98765 43210" id="auth-phone"></div>
+        <div class="form-group" style="display:flex;align-items:flex-start;gap:9px;margin-top:2px">
+          <input type="checkbox" id="signup-privacy-check" onchange="toggleSignupSubmitState()" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)">
+          <label for="signup-privacy-check" style="font-size:12px;color:var(--text2);line-height:1.55;cursor:pointer">
+            I have read and agree to the <a href="#" onclick="event.preventDefault();showLegalPage('terms')" style="color:var(--accent);font-weight:700;text-decoration:underline">Terms &amp; Conditions</a> and the <a href="#" onclick="event.preventDefault();showLegalPage('privacy')" style="color:var(--accent);font-weight:700;text-decoration:underline">Privacy Policy</a>
+          </label>
+        </div>
+      </div>
+
+      <div id="login-fields" style="display:none">
+        <div class="form-group"><label>Email or Mobile number</label><input type="text" placeholder="you@example.com or 98765 43210" id="login-identifier"></div>
+        <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••" id="login-pass" onkeydown="if(event.key==='Enter')handleAuth()"></div>
+      </div>
+
+      <button class="auth-submit" onclick="handleAuth()" id="auth-submit-btn">Create account</button>
+      <div class="auth-switch" id="auth-switch">Already have an account? <a onclick="toggleAuth()">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ORDERS VIEW ============ -->
+<div class="view" id="view-orders">
+  <div class="orders-container">
+    <div style="font-size:20px;font-weight:700;margin-bottom:6px">Your orders</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Track and reorder your past orders</div>
+    <div id="orders-list"></div>
+  </div>
+</div>
+
+<!-- ============ PROFILE VIEW ============ -->
+<div class="view" id="view-profile">
+  <div class="profile-container">
+    <div class="profile-header">
+      <div class="profile-avatar"><i class="ti ti-user"></i></div>
+      <div class="profile-name" id="profile-name-display">Guest</div>
+      <div class="profile-email" id="profile-email-display">Not signed in</div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-item" onclick="showView('orders');setActive(document.querySelectorAll('.bottom-nav-item')[1])"><i class="ti ti-package"></i><span>My orders</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item"><i class="ti ti-map-pin"></i><span>Saved addresses</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item"><i class="ti ti-heart"></i><span>Favourites</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item"><i class="ti ti-bell"></i><span>Notifications</span><i class="ti ti-chevron-right chevron"></i></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-item" onclick="showView('help')"><i class="ti ti-help-circle"></i><span>Help & support</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item" onclick="showLegalPage('privacy')"><i class="ti ti-shield"></i><span>Privacy policy</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item" onclick="showLegalPage('terms')"><i class="ti ti-file-text"></i><span>Terms & conditions</span><i class="ti ti-chevron-right chevron"></i></div>
+      <div class="profile-item" style="color:var(--red)" onclick="signOut()"><i class="ti ti-logout" style="color:var(--red)"></i><span>Sign out</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HELP & SUPPORT VIEW ============ -->
+<div class="view" id="view-help">
+  <div class="orders-container">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <button onclick="showView('profile')" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;display:flex;padding:0;line-height:1"><i class="ti ti-arrow-left"></i></button>
+      <div style="font-size:20px;font-weight:700">Help & Support</div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Stuck with an order or have a question? Reach us directly below — we usually reply within a few hours.</div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="width:46px;height:46px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-mail" style="font-size:22px;color:var(--accent)"></i>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <div style="font-weight:700;font-size:14px">Email us</div>
+          <div style="font-size:13px;color:var(--text2);word-break:break-all">sunny22101082@gmail.com</div>
+        </div>
+        <a href="mailto:sunny22101082@gmail.com?subject=TildaBite%20Support%20Request" style="background:var(--accent);color:#fff;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">Send email</a>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="width:46px;height:46px;border-radius:50%;background:rgba(37,211,102,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-brand-whatsapp" style="font-size:22px;color:#25D366"></i>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <div style="font-weight:700;font-size:14px">WhatsApp us</div>
+          <div style="font-size:13px;color:var(--text2)">+91 91833 35030</div>
+        </div>
+        <a href="https://wa.me/919183335030?text=Hi%2C%20I%20need%20help%20with%20my%20TildaBite%20order" target="_blank" rel="noopener" style="background:#25D366;color:#fff;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">Chat now</a>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;background:var(--accent-bg);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:12px;color:var(--text2);text-align:center">
+      <i class="ti ti-clock" style="font-size:13px;vertical-align:-2px"></i>
+      Support hours: 10:00 AM – 11:00 PM, all days
+    </div>
+  </div>
+</div>
+
+<!-- ============ TERMS & PRIVACY POLICY VIEW ============ -->
+<div class="view" id="view-legal">
+  <div class="orders-container">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button onclick="closeLegalPage()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;display:flex;padding:0;line-height:1"><i class="ti ti-arrow-left"></i></button>
+      <div style="font-size:20px;font-weight:700" id="legal-title">Privacy Policy</div>
+    </div>
+    <div id="legal-content" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
+  </div>
+</div>
+
+<!-- ============ CHECKOUT VIEW ============ -->
+<div class="view" id="view-checkout">
+  <div class="checkout-view">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <button onclick="showView('menu')" style="background:none;border:1px solid var(--border2);color:var(--text2);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center"><i class="ti ti-arrow-left"></i></button>
+      <div style="font-size:20px;font-weight:700">Checkout</div>
+    </div>
+    <div class="checkout-section">
+      <h3><i class="ti ti-map-pin"></i>Delivery address</h3>
+      <textarea class="address-input" id="delivery-address" placeholder="House/Flat no., Street, Area, City…"></textarea>
+      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-current-location"></i> Pin exact location on map (required · 7km delivery zone)</button>
+      <div class="pin-loc-status" id="pin-loc-status" style="display:none"><i class="ti ti-map-pin-check"></i><span id="pin-loc-status-text"></span></div>
+    </div>
+    <div class="checkout-section" id="checkout-items-section">
+      <h3><i class="ti ti-receipt"></i>Order summary</h3>
+      <div id="checkout-items-list"></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div class="cart-total-row"><span>Subtotal</span><span id="co-subtotal">₹0</span></div>
+        <div class="cart-total-row"><span>Delivery fee</span><span style="color:var(--green)">FREE</span></div>
+        <div class="cart-total-row"><span>Taxes (5%)</span><span id="co-tax">₹0</span></div>
+        <div class="cart-total-row grand"><span>Total</span><span id="co-total">₹0</span></div>
+      </div>
+    </div>
+    <div class="checkout-section">
+      <h3><i class="ti ti-credit-card"></i>Payment method</h3>
+      <label class="payment-opt selected" onclick="selectPay(this)">
+        <input type="radio" name="pay" checked> <div class="payment-label"><strong>Razorpay UPI</strong><span>Pay via UPI, NetBanking, Cards</span></div> <span style="font-size:20px">💳</span>
+      </label>
+      <p style="font-size:11.5px;color:var(--text3);margin-top:8px"><i class="ti ti-info-circle" style="margin-right:4px"></i>We currently accept online payments only — no Cash on Delivery.</p>
+    </div>
+    <button class="pay-btn" id="place-order-btn" onclick="placeOrder()"><i class="ti ti-lock"></i> Place order securely</button>
+  </div>
+</div>
+
+<!-- LOCATION PICKER MODAL -->
+<div class="loc-modal-overlay" id="loc-modal-overlay">
+  <div class="loc-modal">
+    <h3>📍 Set delivery location</h3>
+    <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
+    <div id="loc-status-box">📍 Fetching your location...</div>
+    <div id="loc-map"></div>
+    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span><div id="loc-address-preview" style="margin-top:6px;font-size:12.5px;color:var(--text2);font-weight:600"></div></div>
+    <div class="loc-btn-row">
+      <button type="button" id="loc-locate-btn" onclick="locLocateMe()">🎯 Use my location</button>
+      <button type="button" id="loc-confirm-btn" onclick="confirmLocationPick()">✅ Confirm this spot</button>
+    </div>
+    <button type="button" id="loc-cancel-btn" onclick="closeLocationPicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCartIfOutside(event)">
+  <div class="cart-drawer">
+    <div class="cart-header">
+      <h2><i class="ti ti-shopping-cart" style="color:var(--accent);margin-right:8px"></i>Your cart</h2>
+      <button class="close-btn" onclick="closeCart()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="cart-items" id="cart-items-list"></div>
+    <div class="cart-footer" id="cart-footer" style="display:none">
+      <div class="delivery-info"><i class="ti ti-truck"></i> Free delivery · Est. 30-40 min</div>
+      <div class="cart-total-row"><span style="color:var(--text2)">Subtotal</span><span id="cart-subtotal">₹0</span></div>
+      <div class="cart-total-row"><span style="color:var(--text2)">Taxes (5%)</span><span id="cart-tax">₹0</span></div>
+      <div class="cart-total-row grand"><span>Total</span><span id="cart-total">₹0</span></div>
+      <button class="checkout-btn" onclick="goCheckout()">Proceed to checkout →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DELIVERY LOCATION PICKER (Leaflet) ───────────────────────
+let deliveryLat = null, deliveryLng = null;
+let locMap = null, locMarker = null, locRadiusCircle = null;
+// TildaBite kitchen location — delivery radius is measured from here.
+const STORE_LAT = 21.544869, STORE_LNG = 81.801203;
+const MAX_DELIVERY_RADIUS_KM = 7;
+const locDefaultLat = STORE_LAT, locDefaultLng = STORE_LNG;
+
+// Haversine distance in km between two lat/lng points
+function distanceKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function openLocationPicker(){
+  document.getElementById('loc-modal-overlay').classList.add('open');
+  if(!locMap){
+    locMap = L.map('loc-map', { attributionControl: false }).setView([locDefaultLat, locDefaultLng], 13);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19
+    }).addTo(locMap);
+    locRadiusCircle = L.circle([STORE_LAT, STORE_LNG], {
+      radius: MAX_DELIVERY_RADIUS_KM * 1000, color: '#ff5722', weight: 2, fillColor: '#ff5722', fillOpacity: 0.06
+    }).addTo(locMap);
+    L.marker([STORE_LAT, STORE_LNG], {
+      icon: L.divIcon({ html: '🏠', className: '', iconSize: [24,24] })
+    }).addTo(locMap).bindTooltip('TildaBite kitchen', { permanent: false });
+    locMarker = L.marker([locDefaultLat, locDefaultLng], { draggable: true }).addTo(locMap);
+    locMarker.on('dragend', function(){
+      const p = locMarker.getLatLng();
+      updateLocCoords(p.lat, p.lng);
+      setLocStatus('📍 Pin adjusted — drag again or confirm below');
+    });
+    locMap.on('click', function(e){
+      locMarker.setLatLng(e.latlng);
+      updateLocCoords(e.latlng.lat, e.latlng.lng);
+      setLocStatus('📍 Pin adjusted — drag again or confirm below');
+    });
+    setTimeout(()=>locMap.invalidateSize(), 200);
+    locLocateMe();
+  } else {
+    setTimeout(()=>locMap.invalidateSize(), 100);
+  }
+}
+
+function closeLocationPicker(){
+  document.getElementById('loc-modal-overlay').classList.remove('open');
+}
+
+function updateLocCoords(lat, lng){
+  document.getElementById('loc-coords-text').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+  scheduleReverseGeocode(lat, lng);
+}
+
+function setLocStatus(text, confirmed){
+  const el = document.getElementById('loc-status-box');
+  el.textContent = text;
+  el.classList.toggle('confirmed', !!confirmed);
+}
+
+// ─── Reverse geocoding: auto-fill address / nearest landmark ──
+let geocodeTimer = null;
+let lastGeocodedAddress = '';
+
+function scheduleReverseGeocode(lat, lng){
+  clearTimeout(geocodeTimer);
+  document.getElementById('loc-address-preview').textContent = '🔎 Finding nearest landmark…';
+  geocodeTimer = setTimeout(() => reverseGeocode(lat, lng), 700); // debounce while dragging
+}
+
+// Find the nearest NAMED real-world place (shop, temple, school, hospital, etc.)
+// within a small radius by querying OpenStreetMap's Overpass API. This gives a
+// genuine "50-100m away" landmark instead of just the village/pincode.
+async function findNearestLandmark(lat, lng){
+  const radii = [100, 250, 500, 1000]; // metres — expands only if nothing found nearby
+  const query = (r) => `[out:json][timeout:10];(
+    node(around:${r},${lat},${lng})["name"]["amenity"];
+    node(around:${r},${lat},${lng})["name"]["shop"];
+    node(around:${r},${lat},${lng})["name"]["tourism"];
+    node(around:${r},${lat},${lng})["name"]["leisure"];
+    node(around:${r},${lat},${lng})["name"]["office"];
+    node(around:${r},${lat},${lng})["name"]["healthcare"];
+    node(around:${r},${lat},${lng})["name"]["religion"];
+    way(around:${r},${lat},${lng})["name"]["amenity"];
+    way(around:${r},${lat},${lng})["name"]["building"];
+  );out center 20;`;
+
+  for(const r of radii){
+    try{
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(query(r))
+      });
+      if(!res.ok) continue;
+      const data = await res.json();
+      if(!data.elements || !data.elements.length) continue;
+      let best = null, bestDist = Infinity;
+      for(const el of data.elements){
+        const elat = el.lat ?? el.center?.lat;
+        const elng = el.lon ?? el.center?.lon;
+        if(elat == null || elng == null || !el.tags?.name) continue;
+        const d = distanceKm(lat, lng, elat, elng) * 1000; // metres
+        if(d < bestDist){ bestDist = d; best = el; }
+      }
+      if(best) return { name: best.tags.name, distanceM: Math.round(bestDist) };
+    } catch(e){ console.error('Overpass landmark lookup failed:', e); }
+  }
+  return null;
+}
+
+async function fetchNominatimAddress(lat, lng){
+  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+    headers: { 'Accept-Language': 'en' }
+  });
+  const data = await res.json();
+  if(!data || data.error) return null;
+  return data.address || {};
+}
+
+async function reverseGeocode(lat, lng){
+  try{
+    const [landmark, a] = await Promise.all([
+      findNearestLandmark(lat, lng),
+      fetchNominatimAddress(lat, lng)
+    ]);
+    const addr = a || {};
+    const road = addr.road || addr.pedestrian || '';
+    const area = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || '';
+    const city = addr.city || addr.town || addr.state_district || '';
+    const pin = addr.postcode || '';
+
+    const parts = [];
+    if(landmark) parts.push(`Near ${landmark.name} (~${landmark.distanceM}m)`);
+    [road, area, city, pin].forEach(v => { if(v && !parts.includes(v)) parts.push(v); });
+
+    const shortAddress = parts.join(', ');
+    if(!shortAddress){ document.getElementById('loc-address-preview').textContent = ''; return; }
+
+    lastGeocodedAddress = shortAddress;
+    document.getElementById('loc-address-preview').textContent = '📌 ' + shortAddress;
+    // Auto-fill the checkout delivery address field
+    document.getElementById('delivery-address').value = shortAddress;
+  } catch(e){
+    console.error('Reverse geocode failed:', e);
+    document.getElementById('loc-address-preview').textContent = '';
+  }
+}
+
+function locLocateMe(){
+  if(!navigator.geolocation){ setLocStatus('⚠️ Geolocation not supported, set pin manually'); return; }
+  setLocStatus('📍 Fetching your exact location...');
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const { latitude, longitude } = pos.coords;
+      locMap.setView([latitude, longitude], 15);
+      locMarker.setLatLng([latitude, longitude]);
+      updateLocCoords(latitude, longitude);
+      setLocStatus('✅ Location found — address auto-filled, drag pin to fine-tune if needed');
+    },
+    function(){ setLocStatus('⚠️ Location access denied — please drag pin manually'); },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function confirmLocationPick(){
+  const p = locMarker.getLatLng();
+  const dist = distanceKm(STORE_LAT, STORE_LNG, p.lat, p.lng);
+  if(dist > MAX_DELIVERY_RADIUS_KM){
+    setLocStatus(`🚫 Sorry, this spot is ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km of our kitchen`, false);
+    showToast(`❌ Out of delivery range (${dist.toFixed(1)} km away, max ${MAX_DELIVERY_RADIUS_KM} km)`);
+    return;
+  }
+  deliveryLat = p.lat; deliveryLng = p.lng;
+  setLocStatus(`✅ Delivery location confirmed: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)} (${dist.toFixed(1)} km away)`, true);
+  const statusRow = document.getElementById('pin-loc-status');
+  statusRow.style.display = 'flex';
+  document.getElementById('pin-loc-status-text').textContent = `Location pinned · ${dist.toFixed(1)} km from kitchen`;
+  if(lastGeocodedAddress) document.getElementById('delivery-address').value = lastGeocodedAddress;
+  showToast('📍 Delivery location & address pinned!');
+  closeLocationPicker();
+}
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+const SUPABASE_URL = 'https://lqluavkrzejnvzbyuodi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_G4fz5rLx0K1pY1dSzn5Crw_0wZmUMWJ';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── MENU (live from Supabase) ───────────────────────────────
+let MENU = [];
+async function loadSharedMenu(){
+  const { data, error } = await sb.from('menu_items').select('*').eq('active', true).order('id');
+  if(error){ console.error('loadSharedMenu:', error); MENU = []; return; }
+  MENU = data.map(m => ({
+    id: m.id, name: m.name, desc: m.description, price: m.price, cat: m.category,
+    emoji: m.emoji, veg: m.veg, image: m.image || '', stock: m.stock,
+    oos: m.oos, bestseller: m.bestseller, sold: m.sold, active: m.active
+  }));
+}
+// Live sync — any admin change to the menu reflects here instantly
+sb.channel('menu-changes-customer')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, async () => {
+    await loadSharedMenu();
+    applyFilters(document.getElementById('search-input').value.toLowerCase());
+  })
+  .subscribe();
+
+const SAMPLE_ORDERS = [];
+let cart = {};
+
+// ─── STORE OPEN/CLOSED ────────────────────────────────────────
+let STORE_SETTINGS = { is_open:true, opening_time:'10:00', closing_time:'23:00', auto_reopen:true, phone:'' };
+let browsingWhileClosed = false;
+let countdownInterval = null;
+let notifyScheduled = false;
+
+function to12h(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  const ampm = h>=12 ? 'PM' : 'AM';
+  const h12 = h%12===0 ? 12 : h%12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function nextOpeningDate(openingTime){
+  const [h,m] = openingTime.split(':').map(Number);
+  const now = new Date();
+  let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  if(target <= now) target.setDate(target.getDate()+1);
+  return target;
+}
+function nextOpeningDateAfter(openingTime, fromDate){
+  const [h,m] = openingTime.split(':').map(Number);
+  let target = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), h, m, 0);
+  if(target <= fromDate) target.setDate(target.getDate()+1);
+  return target;
+}
+function isEffectivelyOpen(){
+  if(STORE_SETTINGS.is_open) return true;
+  if(STORE_SETTINGS.auto_reopen){
+    // Only auto-reopen once the next scheduled opening time SINCE the manual close has passed.
+    // (Just checking "is now inside 10am-11pm?" would ignore a same-day manual close.)
+    const closedAt = STORE_SETTINGS.updated_at ? new Date(STORE_SETTINGS.updated_at) : new Date(0);
+    const nextOpen = nextOpeningDateAfter(STORE_SETTINGS.opening_time, closedAt);
+    return new Date() >= nextOpen;
+  }
+  return false;
+}
+async function loadStoreSettings(){
+  const { data, error } = await sb.from('store_settings').select('*').eq('id',1).maybeSingle();
+  if(error || !data) return; // if table/row missing, app just behaves as always-open
+  STORE_SETTINGS = data;
+  applyStoreStatus();
+}
+function applyStoreStatus(){
+  if(isEffectivelyOpen()){
+    document.getElementById('closed-overlay').classList.add('hidden');
+    document.getElementById('closed-banner').classList.add('hidden');
+    browsingWhileClosed = false;
+    if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  } else {
+    document.getElementById('closed-opening-time').textContent = to12h(STORE_SETTINGS.opening_time);
+    document.getElementById('closed-hours-text').textContent = `${to12h(STORE_SETTINGS.opening_time)} – ${to12h(STORE_SETTINGS.closing_time)}`;
+    document.getElementById('closed-call-btn').style.display = STORE_SETTINGS.phone ? 'flex' : 'none';
+    startCountdown();
+    if(browsingWhileClosed){
+      document.getElementById('closed-overlay').classList.add('hidden');
+      document.getElementById('closed-banner').classList.remove('hidden');
+    } else {
+      document.getElementById('closed-overlay').classList.remove('hidden');
+      document.getElementById('closed-banner').classList.add('hidden');
+    }
+  }
+}
+function startCountdown(){
+  if(countdownInterval) clearInterval(countdownInterval);
+  const tick = () => {
+    if(isEffectivelyOpen()){ applyStoreStatus(); return; }
+    const closedAt = STORE_SETTINGS.updated_at ? new Date(STORE_SETTINGS.updated_at) : new Date();
+    const target = nextOpeningDateAfter(STORE_SETTINGS.opening_time, closedAt);
+    const diff = target - new Date();
+    const hrs = Math.floor(diff/3600000);
+    const mins = Math.floor((diff%3600000)/60000);
+    document.getElementById('closed-countdown-text').textContent = `${hrs}h ${mins}m`;
+  };
+  tick();
+  countdownInterval = setInterval(tick, 30000);
+}
+function showClosedOverlay(){
+  browsingWhileClosed = false;
+  applyStoreStatus();
+}
+function browseMenuReadOnly(){
+  browsingWhileClosed = true;
+  applyStoreStatus();
+  showToast('Browsing menu — ordering opens at '+to12h(STORE_SETTINGS.opening_time));
+}
+function callRestaurant(){
+  if(STORE_SETTINGS.phone) window.location.href = 'tel:'+STORE_SETTINGS.phone.replace(/\s/g,'');
+}
+function requestOpenNotify(){
+  if(!('Notification' in window)){ showToast('Notifications not supported on this browser'); return; }
+  if(Notification.permission === 'granted'){ scheduleOpenNotification(); return; }
+  Notification.requestPermission().then(perm=>{
+    if(perm === 'granted'){ scheduleOpenNotification(); }
+    else { showToast('Enable notifications in browser settings to get notified'); }
+  });
+}
+function scheduleOpenNotification(){
+  if(notifyScheduled){ showToast("You're already set — we'll notify you when we open!"); return; }
+  const target = nextOpeningDate(STORE_SETTINGS.opening_time);
+  const diff = target - new Date();
+  notifyScheduled = true;
+  showToast("Got it! We'll notify you when we open 🔔 (keep this tab open)");
+  setTimeout(()=>{
+    if(isEffectivelyOpen() || document.hidden === false){
+      new Notification('TildaBite is open! 🍽️', { body: "We're back — order your favourites now!" });
+    }
+  }, Math.max(0, diff));
+}
+// Realtime: reflect admin's open/close toggle instantly
+sb.channel('customer-store-settings')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, () => loadStoreSettings())
+  .subscribe();
+let isDark = true;
+document.body.classList.add('dark');
+document.getElementById('theme-icon').className = 'ti ti-sun';
+let authMode = 'signup';
+let currentCat = 'all';
+let dietFilter = 'all'; // 'all' | 'veg' | 'nonveg'
+let isLoggedIn = false;
+let loggedInUser = { name: 'Guest', email: '' };
+let sessionToken = null;
+const SESSION_KEY = 'tildabite_session';
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function saveSession(acc){
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    token: acc.token, id: acc.id, name: acc.name, email: acc.email, phone: acc.phone,
+    expiresAt: Date.now() + SESSION_DURATION_MS
+  }));
+}
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+function restoreSession(){
+  const raw = localStorage.getItem(SESSION_KEY);
+  if(!raw) return;
+  let saved;
+  try { saved = JSON.parse(raw); } catch(e){ clearSession(); return; }
+  if(!saved || !saved.expiresAt || Date.now() > saved.expiresAt){
+    clearSession(); // session expired after 24hrs — back to signed-out state
+    return;
+  }
+  isLoggedIn = true;
+  sessionToken = saved.token;
+  loggedInUser = { id: saved.id, name: saved.name, email: saved.email, phone: saved.phone };
+  document.getElementById('auth-nav-label').textContent = saved.name.split(' ')[0];
+  document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
+  document.getElementById('profile-name-display').textContent = saved.name;
+  document.getElementById('profile-email-display').textContent = saved.email;
+  subscribeToMyOrders();
+  renderOrders();
+}
+
+function requireAuth(action) {
+  if (!isLoggedIn) {
+    showToast('Please sign in to continue 🔑');
+    showView('auth');
+    document.getElementById('auth-sub').textContent = 'Sign in to place orders & track deliveries';
+    pendingAction = action;
+    return false;
+  }
+  return true;
+}
+
+let pendingAction = null;
+
+function setDiet(type){
+  dietFilter = type;
+  document.getElementById('diet-all').className   = 'diet-btn' + (type==='all'?' active-all':'');
+  document.getElementById('diet-veg').className   = 'diet-btn' + (type==='veg'?' active-veg':'');
+  document.getElementById('diet-nonveg').className= 'diet-btn' + (type==='nonveg'?' active-nonveg':'');
+  const q = document.getElementById('search-input').value.toLowerCase();
+  applyFilters(q);
+}
+
+function showSkeleton(){
+  const sg = document.getElementById('skeleton-grid');
+  const mg = document.getElementById('menu-grid');
+  sg.style.display='grid';
+  mg.style.display='none';
+  sg.innerHTML = Array(6).fill(0).map(()=>`
+    <div class="skeleton-card">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line tag"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-footer">
+          <div class="skeleton-price"></div>
+          <div class="skeleton-btn"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function hideSkeleton(){
+  document.getElementById('skeleton-grid').style.display='none';
+  document.getElementById('menu-grid').style.display='grid';
+}
+
+function isOutOfStock(item){
+  if(item.oos) return true;
+  if(typeof item.stock === 'number' && item.stock <= 0) return true;
+  return false;
+}
+function remainingStock(item){
+  if(typeof item.stock !== 'number') return Infinity;
+  return Math.max(0, item.stock - (cart[item.id]||0));
+}
+
+function renderMenu(items){
+  hideSkeleton();
+  const grid = document.getElementById('menu-grid');
+  grid.innerHTML = items.map(item => {
+    const qty = cart[item.id]||0;
+    const oos = isOutOfStock(item);
+    const rem = remainingStock(item);
+    const fewLeft = !oos && typeof item.stock==='number' && item.stock>0 && item.stock<=5;
+    const badges = [];
+    if(item.bestseller) badges.push('<span style="display:inline-block;background:rgba(245,158,11,0.15);color:#b45309;border:1px solid rgba(245,158,11,0.35);border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:6px;letter-spacing:0.5px;margin-left:4px">⭐ BEST SELLER</span>');
+    if(oos) badges.push('<span style="display:inline-block;background:rgba(220,38,38,0.1);color:#DC2626;border:1px solid rgba(220,38,38,0.35);border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:6px;letter-spacing:0.5px;margin-left:4px">OUT OF STOCK</span>');
+    else if(fewLeft) badges.push(`<span style="display:inline-block;background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.35);border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:6px;letter-spacing:0.5px;margin-left:4px">ONLY ${item.stock} LEFT</span>`);
+    const imgHtml = item.image
+      ? `<div class="menu-card-img" style="background:#000"><img src="${item.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='${item.emoji||'🍽️'}';this.parentElement.style.background='linear-gradient(145deg,#FFF0E6,#FFF8F3)';this.parentElement.style.fontSize='68px'"></div>`
+      : `<div class="menu-card-img" style="position:relative">${item.emoji||'🍽️'}${oos?'<div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:1px">SOLD OUT</div>':''}</div>`;
+    const actionHtml = oos
+      ? `<button class="add-btn" disabled style="background:var(--text3);cursor:not-allowed;box-shadow:none" title="Out of stock">×</button>`
+      : qty===0
+        ? `<button class="add-btn" onclick="addItem(${item.id})">+</button>`
+        : `<div class="qty-control"><button class="qty-btn" onclick="removeItem(${item.id})">−</button><span class="qty-num">${qty}</span><button class="qty-btn" onclick="addItem(${item.id})"${rem<=0?' disabled style="opacity:0.4;cursor:not-allowed"':''}>+</button></div>`;
+    return `<div class="menu-card"${oos?' style="opacity:0.7"':''}>
+      ${imgHtml}
+      <div class="menu-card-body">
+        <div style="display:flex;flex-wrap:wrap;align-items:center">
+          <div class="${item.veg?'veg-tag':'nonveg-tag'}">${item.veg?'VEG':'NON-VEG'}</div>
+          ${badges.join('')}
+        </div>
+        <h3>${item.name}</h3>
+        <p>${item.desc||''}</p>
+        <div class="menu-card-footer">
+          <div class="price">₹${item.price}</div>
+          ${actionHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCat(cat, btn){
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const q = document.getElementById('search-input').value.toLowerCase();
+  applyFilters(q);
+}
+
+function filterMenu(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  applyFilters(q);
+}
+
+function applyFilters(q){
+  let items = MENU.slice();
+  if(currentCat!=='all') items = items.filter(i=>i.cat===currentCat);
+  if(dietFilter==='veg') items = items.filter(i=>i.veg);
+  if(dietFilter==='nonveg') items = items.filter(i=>!i.veg);
+  if(q) items = items.filter(i=>i.name.toLowerCase().includes(q)||(i.desc||'').toLowerCase().includes(q));
+  // Best sellers first, then in-stock before out-of-stock
+  items.sort((a,b)=>{
+    const oa = isOutOfStock(a)?1:0, ob = isOutOfStock(b)?1:0;
+    if(oa!==ob) return oa-ob;
+    return (b.bestseller?1:0) - (a.bestseller?1:0);
+  });
+  document.getElementById('menu-section-title').textContent = items.length + ' items found';
+  document.getElementById('diet-count-badge').textContent = items.length + ' item' + (items.length!==1?'s':'');
+  renderMenu(items);
+}
+
+function addItem(id){
+  if(!isEffectivelyOpen()){ showToast("We're closed right now — opening at "+to12h(STORE_SETTINGS.opening_time)); return; }
+  if(!requireAuth('addItem')) return;
+  const item = MENU.find(m=>m.id==id);
+  if(!item || isOutOfStock(item)){ showToast('Sorry, this item is out of stock'); return; }
+  if(typeof item.stock === 'number' && (cart[id]||0) >= item.stock){
+    showToast(`Only ${item.stock} available — that's the max!`);
+    return;
+  }
+  cart[id]=(cart[id]||0)+1;
+  updateCartUI();
+  applyFilters(document.getElementById('search-input').value.toLowerCase());
+  showToast('Added to cart!');
+}
+function removeItem(id){
+  if(cart[id]>0) cart[id]--;
+  if(cart[id]===0) delete cart[id];
+  updateCartUI();
+  applyFilters(document.getElementById('search-input').value.toLowerCase());
+}
+
+function updateCartUI(){
+  const count = Object.values(cart).reduce((a,b)=>a+b,0);
+  const badge = document.getElementById('cart-badge');
+  if(count>0){badge.style.display='flex';badge.textContent=count;}else{badge.style.display='none';}
+  renderCartDrawer();
+}
+
+function renderCartDrawer(){
+  const list = document.getElementById('cart-items-list');
+  const footer = document.getElementById('cart-footer');
+  const keys = Object.keys(cart).filter(k=>cart[k]>0);
+  if(keys.length===0){
+    list.innerHTML='<div class="cart-empty"><i class="ti ti-shopping-cart-off"></i>Your cart is empty<br><span style="font-size:12px;margin-top:6px;display:block">Add items from the menu</span></div>';
+    footer.style.display='none';return;
+  }
+  list.innerHTML=keys.map(k=>{
+    const item=MENU.find(m=>m.id==k);
+    return `<div class="cart-item">
+      <div class="cart-item-emoji">${item.emoji}</div>
+      <div class="cart-item-info"><h4>${item.name}</h4><p>₹${item.price} × ${cart[k]}</p></div>
+      <div class="qty-control" style="background:var(--card)">
+        <button class="qty-btn" onclick="removeItem(${k})">−</button>
+        <span class="qty-num">${cart[k]}</span>
+        <button class="qty-btn" onclick="addItem(${k})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  footer.style.display='block';
+  const sub=keys.reduce((s,k)=>{const i=MENU.find(m=>m.id==k);return s+i.price*cart[k];},0);
+  const tax=Math.round(sub*0.05);
+  document.getElementById('cart-subtotal').textContent='₹'+sub;
+  document.getElementById('cart-tax').textContent='₹'+tax;
+  document.getElementById('cart-total').textContent='₹'+(sub+tax);
+}
+
+function openCart(){document.getElementById('cart-overlay').classList.add('open');}
+function closeCart(){document.getElementById('cart-overlay').classList.remove('open');}
+function closeCartIfOutside(e){if(e.target===document.getElementById('cart-overlay'))closeCart();}
+
+function goCheckout(){
+  if(!requireAuth('checkout')) return;
+  closeCart();
+  renderCheckout();
+  showView('checkout');
+}
+
+function renderCheckout(){
+  const keys = Object.keys(cart).filter(k=>cart[k]>0);
+  const itemsEl = document.getElementById('checkout-items-list');
+  itemsEl.innerHTML = keys.map(k=>{
+    const item=MENU.find(m=>m.id==k);
+    return `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--border)"><span>${item.name} × ${cart[k]}</span><span>₹${item.price*cart[k]}</span></div>`;
+  }).join('');
+  const sub=keys.reduce((s,k)=>{const i=MENU.find(m=>m.id==k);return s+i.price*cart[k];},0);
+  const tax=Math.round(sub*0.05);
+  document.getElementById('co-subtotal').textContent='₹'+sub;
+  document.getElementById('co-tax').textContent='₹'+tax;
+  document.getElementById('co-total').textContent='₹'+(sub+tax);
+}
+
+function selectPay(el){
+  document.querySelectorAll('.payment-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked=true;
+}
+
+async function placeOrder(){
+  if(!isEffectivelyOpen()){ showToast("We're closed right now — opening at "+to12h(STORE_SETTINGS.opening_time)); showClosedOverlay(); return; }
+  if(!requireAuth('placeOrder')) return;
+  const address = document.getElementById('delivery-address').value.trim();
+  if(!address){ showToast('Please enter a delivery address'); return; }
+  if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please pin your exact location on the map — we only deliver within 7 km'); openLocationPicker(); return; }
+  const keys = Object.keys(cart).filter(k=>cart[k]>0);
+  if(!keys.length){ showToast('Your cart is empty'); return; }
+  // Only send item id + qty — server looks up the real price itself,
+  // so a tampered client can no longer change what gets charged.
+  const itemsPayload = keys.map(k=>({ id: Number(k), qty: cart[k] }));
+
+  const payBtn = document.getElementById('place-order-btn');
+  if(payBtn){ payBtn.disabled = true; payBtn.textContent = 'Please wait...'; }
+
+  // Step 1: ask our server (Edge Function) to price the cart for real
+  // and open a Razorpay order for that amount.
+  const { data: payData, error: payErr } = await sb.functions.invoke('create-payment-order', {
+    body: { token: sessionToken, items: itemsPayload, address, lat: deliveryLat, lng: deliveryLng }
+  });
+
+  if(payErr || payData?.error){
+    const msg = payData?.error === 'TOO_MANY_ATTEMPTS'
+      ? 'Too many payment attempts — please wait a few minutes and try again'
+      : (payData?.error || payErr.message || 'Could not start payment');
+    showToast('❌ '+msg);
+    if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+    return;
+  }
+
+  // Step 2: open Razorpay Checkout — customer pays here (UPI/card/etc.)
+  const rzp = new Razorpay({
+    key: payData.key_id,
+    amount: payData.amount,
+    currency: payData.currency,
+    order_id: payData.razorpay_order_id,
+    name: 'TildaBite',
+    description: 'Food order payment',
+    prefill: { name: loggedInUser?.name || '', contact: loggedInUser?.phone || '', email: loggedInUser?.email || '' },
+    theme: { color: '#F07C1A' },
+    handler: async function(response){
+      // Step 3: payment succeeded on Razorpay's side — verify signature
+      // server-side and create the real order.
+      const { data: verifyData, error: verifyErr } = await sb.functions.invoke('verify-payment', {
+        body: {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        }
+      });
+
+      if(verifyErr || verifyData?.error || !verifyData?.success){
+        showToast('❌ Payment received but confirmation failed — contact support with payment ID: '+response.razorpay_payment_id);
+        if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+        return;
+      }
+
+      const order = verifyData.order;
+      const otp = order.otp;
+      showToast('Order placed! Your delivery OTP is: '+otp+' 🎉');
+      window._lastOtp = otp;
+      window._lastOrderId = order.id;
+      cart={};updateCartUI();
+      deliveryLat = null; deliveryLng = null;
+      document.getElementById('pin-loc-status').style.display = 'none';
+      if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+      await loadSharedMenu(); // stock/sold already decremented in DB via trigger
+      applyFilters(document.getElementById('search-input').value.toLowerCase());
+      await renderOrders();
+      setTimeout(()=>{showView('orders');setActive(document.querySelectorAll('.bottom-nav-item')[1]);},1200);
+    },
+    modal: {
+      ondismiss: function(){
+        // customer closed the Razorpay popup without paying
+        if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+        showToast('Payment cancelled');
+      }
+    }
+  });
+
+  rzp.on('payment.failed', function(){
+    showToast('❌ Payment failed — please try again');
+    if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+  });
+
+  if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
+  rzp.open();
+}
+
+async function renderOrders(){
+  const list = document.getElementById('orders-list');
+  if(!isLoggedIn){
+    list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><i class="ti ti-lock" style="font-size:48px;display:block;margin-bottom:12px"></i>Sign in to see your orders</div>';
+    return;
+  }
+  const { data, error } = await sb.from('orders').select('*').eq('user_id', loggedInUser.id).order('created_at', { ascending: false });
+  const myOrders = (error ? [] : data).map(o => ({
+    id: o.id,
+    date: new Date(o.created_at).toLocaleDateString('en-IN'),
+    status: o.status,
+    items: (o.items || []).map(i => `${i.name} ×${i.qty}`),
+    total: o.total,
+    otp: o.otp
+  }));
+  let otpBanner = '';
+  if(window._lastOtp && window._lastOrderId){
+    otpBanner = `<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <i class="ti ti-lock" style="font-size:22px;color:var(--green)"></i>
+      <div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:2px">Delivery OTP for ${window._lastOrderId}</div>
+        <div style="font-size:26px;font-weight:800;letter-spacing:8px;color:var(--green)">${window._lastOtp}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Share this with your delivery rider to confirm delivery</div>
+      </div>
+    </div>`;
+  }
+  if(myOrders.length===0){
+    list.innerHTML=otpBanner+'<div style="text-align:center;padding:60px 20px;color:var(--text3)"><i class="ti ti-package" style="font-size:48px;display:block;margin-bottom:12px"></i>No orders yet<br><span style="font-size:12px;margin-top:6px;display:block">Your orders will appear here once you place one</span></div>';
+    return;
+  }
+  list.innerHTML = otpBanner + myOrders.map(o=>{
+    const statusCls = o.status==='delivered'?'status-delivered':o.status==='pending'?'status-preparing':'status-otw';
+    const statusLabel = o.status==='delivered'?'✔ Delivered':o.status==='pending'?'⏳ Pending':'🚴 On the way';
+    const otpTag = o.status!=='delivered'?`<div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--accent)"><i class="ti ti-lock" style="font-size:12px"></i>OTP: ${o.otp}</div>`:'';
+    return `<div class="order-card">
+      <div class="order-card-header">
+        <div><div style="font-size:15px;font-weight:700">${o.id}</div><div class="order-id">${o.date}</div></div>
+        <div class="order-status ${statusCls}">${statusLabel}</div>
+      </div>
+      <div class="order-items-list">${o.items.join(' · ')}</div>
+      ${otpTag}
+      <div class="order-footer" style="margin-top:10px">
+        <div style="font-size:15px;font-weight:700">₹${o.total}</div>
+        <button class="reorder-btn" onclick="showToast('Reorder coming soon!')">Reorder</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function setActive(btn){
+  document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── TERMS & CONDITIONS / PRIVACY POLICY ──────────────────────
+let legalReturnView = 'auth';
+const LEGAL_LAST_UPDATED = 'July 2026';
+
+const TERMS_HTML = `
+  <p><strong>Last updated:</strong> ${LEGAL_LAST_UPDATED}</p>
+  <p>Welcome to TildaBite. By creating an account, browsing our menu, or placing an order through our website or app ("Platform"), you agree to the following Terms & Conditions. Please read them carefully.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">1. Account Registration</h4>
+  <p>You must provide accurate and complete information (name, email, phone number) when creating an account. You are responsible for keeping your login credentials confidential and for all activity under your account.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">2. Orders & Payments</h4>
+  <p>All orders placed through the Platform are subject to acceptance and item availability. Prices, taxes, and delivery charges are displayed at checkout before you confirm payment. We currently accept online payments only (UPI, NetBanking, and cards via Razorpay) — Cash on Delivery is not available.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">3. Delivery</h4>
+  <p>Estimated delivery/preparation times are approximate and may vary due to weather, traffic, order volume, or circumstances beyond our control. We are not liable for delays caused by factors outside our reasonable control.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">4. Cancellations & Refunds</h4>
+  <p>Orders can typically be cancelled only before preparation begins. Once an order is being prepared or out for delivery, it may not be eligible for cancellation. Refunds for valid cancellations, missing items, or quality issues will be processed to the original payment method or as store credit, at our discretion, within a reasonable time.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">5. Restaurant Hours & Availability</h4>
+  <p>We may mark the restaurant as closed at any time (e.g. outside operating hours, high demand, or unforeseen circumstances). Ordering will not be possible while the restaurant is closed.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">6. User Conduct</h4>
+  <p>You agree not to misuse the Platform, including submitting false orders, abusing delivery staff, attempting to interfere with the Platform's security, or using it for any unlawful purpose. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">7. Limitation of Liability</h4>
+  <p>To the maximum extent permitted by law, TildaBite is not liable for indirect, incidental, or consequential damages arising from use of the Platform. Our total liability for any claim is limited to the amount paid for the relevant order.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">8. Changes to These Terms</h4>
+  <p>We may update these Terms from time to time. Continued use of the Platform after changes are posted constitutes acceptance of the revised Terms.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">9. Governing Law</h4>
+  <p>These Terms are governed by the laws of India, and any disputes will be subject to the jurisdiction of the courts where TildaBite is registered/operated.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">10. Contact Us</h4>
+  <p>For any questions about these Terms, reach us at <strong>sunny22101082@gmail.com</strong> or WhatsApp <strong>+91 91833 35030</strong>.</p>
+`;
+
+const PRIVACY_HTML = `
+  <p><strong>Last updated:</strong> ${LEGAL_LAST_UPDATED}</p>
+  <p>This Privacy Policy explains how TildaBite ("we", "us") collects, uses, and protects your information when you use our website or app ("Platform").</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">1. Information We Collect</h4>
+  <p>When you sign up or place an order, we collect your name, email address, phone number, delivery address, and order history. We do not store your full card details — payments are handled securely through our payment partners.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">2. How We Use Your Information</h4>
+  <p>We use your information to process and deliver your orders, send order/status updates (via SMS, WhatsApp, email, or push notification), provide customer support, improve our menu and service, and share offers or promotions (you can opt out of promotional messages anytime).</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">3. Sharing of Information</h4>
+  <p>We share only the information necessary to fulfil your order with our delivery riders (name, phone, address) and payment processors (for completing transactions). We do not sell your personal information to third parties.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">4. Data Storage & Security</h4>
+  <p>Your data is stored on secure, access-controlled servers. While we take reasonable measures to protect your information, no method of electronic storage is 100% secure, and we cannot guarantee absolute security.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">5. Cookies & Local Storage</h4>
+  <p>We use local storage on your device to keep you signed in for up to 24 hours and to remember basic preferences like theme. This data stays on your device and is not shared with third parties.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">6. Your Rights</h4>
+  <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <strong>sunny22101082@gmail.com</strong>. You may also sign out at any time to end your active session.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">7. Children's Privacy</h4>
+  <p>Our Platform is not directed at children under 13, and we do not knowingly collect personal information from children.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">8. Changes to This Policy</h4>
+  <p>We may update this Privacy Policy periodically. Continued use of the Platform after changes are posted constitutes acceptance of the revised policy.</p>
+
+  <h4 style="margin:16px 0 6px;color:var(--text)">9. Contact Us</h4>
+  <p>For privacy-related questions or requests, email <strong>sunny22101082@gmail.com</strong> or message us on WhatsApp at <strong>+91 91833 35030</strong>.</p>
+`;
+
+function showLegalPage(type){
+  const active = document.querySelector('.view.active');
+  legalReturnView = active ? active.id.replace('view-','') : 'auth';
+  document.getElementById('legal-title').textContent = type === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions';
+  document.getElementById('legal-content').innerHTML = type === 'privacy' ? PRIVACY_HTML : TERMS_HTML;
+  showView('legal');
+}
+function closeLegalPage(){
+  showView(legalReturnView);
+}
+
+function toggleAuth(){
+  authMode = authMode==='login'?'signup':'login';
+  const isLogin = authMode==='login';
+  document.getElementById('auth-title').textContent = isLogin?'Welcome back 👋':'Create account 🚀';
+  document.getElementById('auth-sub').textContent   = isLogin?'Sign in to track orders & save favourites':'Join TildaBite – your favourite food, delivered fast';
+  document.getElementById('auth-submit-btn').textContent = isLogin?'Sign in':'Create account';
+  document.getElementById('auth-switch').innerHTML  = isLogin?`Don't have an account? <a onclick="toggleAuth()">Sign up</a>`:`Already have an account? <a onclick="toggleAuth()">Sign in</a>`;
+  document.getElementById('signup-fields').style.display = isLogin?'none':'block';
+  document.getElementById('login-fields').style.display  = isLogin?'block':'none';
+  toggleSignupSubmitState();
+}
+function toggleSignupSubmitState(){
+  const btn = document.getElementById('auth-submit-btn');
+  if(authMode === 'signup' && !document.getElementById('signup-privacy-check').checked){
+    btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+  } else {
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+  }
+}
+
+async function handleAuth(){
+  if(authMode === 'signup'){
+    const email = document.getElementById('auth-email').value.trim().toLowerCase();
+    const pass  = document.getElementById('auth-pass').value;
+    const name  = document.getElementById('auth-name').value.trim();
+    const phone = document.getElementById('auth-phone').value.trim();
+    if(!email){ showToast('Please enter your email'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showToast('Please enter a valid email address'); return; }
+    if(!pass || pass.length < 6){ showToast('Password must be at least 6 characters'); return; }
+    if(!name){ showToast('Please enter your full name'); return; }
+    if(!document.getElementById('signup-privacy-check').checked){ showToast('Please agree to the Terms & Conditions and Privacy Policy to continue'); return; }
+    const { error } = await sb.rpc('customer_signup', { p_name: name, p_email: email, p_phone: phone, p_password: pass });
+    if(error){
+      if(error.message.includes('ACCOUNT_EXISTS')){ showToast('Account already exists. Please sign in.'); }
+      else { showToast('❌ '+error.message); }
+      return;
+    }
+    showToast('Account created! Please sign in now.');
+    setTimeout(()=>{ toggleAuth(); document.getElementById('login-identifier').value = email; }, 800);
+    return;
+  }
+  const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
+  const pass       = document.getElementById('login-pass').value;
+  if(!identifier){ showToast('Please enter your email or mobile number'); return; }
+  if(!pass){ showToast('Please enter your password'); return; }
+  const { data: rows, error: loginErr } = await sb.rpc('customer_login', { p_identifier: identifier, p_password: pass });
+  const acc = rows && rows[0];
+  if(loginErr || !acc){
+    if(loginErr && loginErr.message.includes('TOO_MANY_ATTEMPTS')){ showToast('Too many failed attempts. Please try again in 7 minutes.'); }
+    else if(loginErr && loginErr.message.includes('WRONG_PASSWORD')){ showToast('Incorrect password. Please try again.'); document.getElementById('login-pass').value=''; }
+    else { showToast('No account found with that email or mobile number.'); }
+    return;
+  }
+  isLoggedIn = true;
+  sessionToken = acc.token;
+  loggedInUser = { id: acc.id, name: acc.name, email: acc.email, phone: acc.phone };
+  saveSession(acc);
+  document.getElementById('auth-nav-label').textContent = acc.name.split(' ')[0];
+  document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
+  document.getElementById('profile-name-display').textContent = acc.name;
+  document.getElementById('profile-email-display').textContent = acc.email;
+  showToast('Signed in successfully! 🎉');
+  document.getElementById('auth-submit-btn').textContent = '✓ Signed in';
+  subscribeToMyOrders();
+  renderOrders();
+  setTimeout(()=>{
+    if(pendingAction==='checkout'){ showView('menu'); setTimeout(()=>{ openCart(); }, 300); }
+    else if(pendingAction==='placeOrder'){ renderCheckout(); showView('checkout'); }
+    else { showView('menu'); }
+    pendingAction = null;
+  }, 1000);
+}
+
+// Live order-status updates for the signed-in customer
+let myOrdersChannel = null;
+function subscribeToMyOrders(){
+  if(myOrdersChannel) sb.removeChannel(myOrdersChannel);
+  myOrdersChannel = sb.channel('my-orders-'+loggedInUser.id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'user_id=eq.'+loggedInUser.id }, payload => {
+      showToast(`Order ${payload.new.id} is now: ${payload.new.status} 🚀`);
+      renderOrders();
+    })
+    .subscribe();
+}
+
+function handleAuthNavClick(){
+  if(isLoggedIn){ showView('profile'); setActive(document.querySelectorAll('.bottom-nav-item')[2]); }
+  else { showView('auth'); }
+}
+
+function signOut(){
+  if(sessionToken){ sb.rpc('logout', { p_token: sessionToken }); }
+  isLoggedIn = false;
+  sessionToken = null;
+  loggedInUser = { name: 'Guest', email: '' };
+  clearSession();
+  if(myOrdersChannel){ sb.removeChannel(myOrdersChannel); myOrdersChannel = null; }
+  cart = {};
+  updateCartUI();
+  document.getElementById('auth-nav-label').textContent = 'Sign in';
+  document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user';
+  document.getElementById('auth-email').value='';
+  document.getElementById('auth-pass').value='';
+  document.getElementById('login-identifier').value='';
+  document.getElementById('login-pass').value='';
+  showToast('Signed out successfully');
+  showView('auth');
+  setActive(document.querySelectorAll('.bottom-nav-item')[0]);
+}
+
+let toastTimer;
+function showToast(msg){
+  clearTimeout(toastTimer);
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2200);
+}
+
+function toggleTheme(){
+  isDark=!isDark;
+  document.body.classList.toggle('dark',isDark);
+  document.getElementById('theme-icon').className=isDark?'ti ti-sun':'ti ti-moon';
+}
+
+// Show skeleton on first load, then render menu
+showSkeleton();
+(async () => {
+  await loadSharedMenu();
+  applyFilters('');
+})();
+loadStoreSettings();
+restoreSession();
+renderOrders();
+toggleSignupSubmitState();
+</script>
