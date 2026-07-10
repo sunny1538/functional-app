@@ -737,7 +737,7 @@ async function saveDeliveryAddress(){
     customer_id: loggedInUser.id, address: addressText, landmark: landmarkText,
     lat: pickedLat, lng: pickedLng
   }).select().maybeSingle();
-  if(error){ showToast('❌ Could not save address, please try again'); console.error(error); return; }
+  if(error){ showToast('❌ Could not save address: ' + (error.message || 'unknown error')); console.error(error); return; }
   savedAddresses.push(data);
   selectSavedAddress(data.id);
   showToast('✅ Delivery address saved!');
