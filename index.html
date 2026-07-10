@@ -191,54 +191,46 @@
   .address-input:focus{border-color:var(--accent)}
   .pin-loc-btn{width:100%;margin-top:10px;background:var(--accent-bg);border:1.5px dashed var(--accent);color:var(--accent);padding:11px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
   .pin-loc-btn:hover{background:var(--accent-bg)}
-  .saved-addr-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1.5px solid var(--border2);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;transition:all 0.2s}
-  .saved-addr-card:hover{border-color:var(--accent)}
-  .saved-addr-card.selected{border-color:var(--accent);background:var(--accent-bg)}
-  .saved-addr-card i.saved-addr-pin{color:var(--accent);font-size:20px;margin-top:2px;flex-shrink:0}
-  .saved-addr-info{flex:1;min-width:0}
-  .saved-addr-text{font-size:14px;font-weight:600;line-height:1.4;word-break:break-word}
-  .saved-addr-landmark{font-size:12px;color:var(--text2);margin-top:3px}
-  .saved-addr-check{font-size:20px;color:var(--accent);flex-shrink:0;opacity:0}
-  .saved-addr-card.selected .saved-addr-check{opacity:1}
-  .saved-addr-remove{flex-shrink:0;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px}
-  .saved-addr-remove:hover{color:var(--red)}
-  .saved-addr-empty{text-align:center;padding:24px 12px;color:var(--text3);font-size:13px}
-  .loc-field-input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;outline:none;font-family:inherit;margin-top:10px}
-  .loc-field-input:focus{border-color:var(--accent)}
-  body.dark .loc-field-input{background:#1e1e1e;color:#f0f0f0;border-color:#333}
-  .loc-modal-overlay{position:fixed;inset:0;background:#eee;z-index:400;display:none}
-  .loc-modal-overlay.open{display:block}
-  .loc-modal{position:relative;width:100%;height:100%;overflow:hidden}
-  #loc-map{position:absolute;inset:0;z-index:1}
-  .loc-topbar{position:absolute;top:0;left:0;right:0;z-index:50;padding:14px 14px 0;display:flex;flex-direction:column;gap:8px}
-  .loc-topbar-row{display:flex;align-items:center;gap:10px}
-  .loc-back-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:#333;flex-shrink:0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25)}
-  .loc-search-box{flex:1;background:#fff;border-radius:12px;display:flex;align-items:center;padding:0 12px;box-shadow:0 2px 10px rgba(0,0,0,0.25)}
-  .loc-search-box i{color:#999;font-size:16px}
-  .loc-search-box input{flex:1;border:none;outline:none;padding:11px 8px;font-size:14px;background:transparent;color:#1a1a1a}
-  .loc-current-row{background:#fff;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#4f46e5;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
-  .loc-current-row i{font-size:17px}
-  .loc-suggestions{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.2);max-height:240px;overflow-y:auto}
-  .loc-suggestion-item{padding:11px 14px;font-size:13px;color:#333;border-bottom:1px solid #f0f0f0;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
-  .loc-suggestion-item:last-child{border-bottom:none}
-  .loc-suggestion-item:hover{background:#f7f7f7}
-  .loc-suggestion-item i{color:#999;margin-top:2px;font-size:14px;flex-shrink:0}
-  .loc-center-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;transition:transform 0.15s ease-out}
-  .loc-center-pin i{font-size:38px;color:#ff5722;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.35))}
-  .loc-center-pin .loc-pin-shadow{width:10px;height:5px;background:rgba(0,0,0,0.35);border-radius:50%;margin-top:-3px;filter:blur(1px);transition:opacity 0.15s}
-  .loc-modal.dragging .loc-center-pin{transform:translate(-50%,-118%)}
-  .loc-modal.dragging .loc-center-pin .loc-pin-shadow{opacity:0.3}
-  .loc-sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#fff;border-radius:20px 20px 0 0;padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 24px rgba(0,0,0,0.2)}
-  body.dark .loc-sheet{background:#141414;color:#f0f0f0}
-  .loc-sheet-addr{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px}
-  .loc-sheet-addr i{color:#ff5722;font-size:18px;margin-top:1px;flex-shrink:0}
-  .loc-sheet-addr-text{flex:1;font-size:14px;font-weight:700;line-height:1.4}
-  .loc-sheet-sub{font-size:12px;color:#888;margin:2px 0 14px 28px;font-weight:600}
-  body.dark .loc-sheet-sub{color:#999}
-  .loc-sheet-sub.warn{color:#dc2626}
-  .loc-sheet-sub.ok{color:#16a34a}
-  #loc-confirm-btn{width:100%;background:#ff5722;color:#fff;border:none;padding:14px;border-radius:12px;font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
-  #loc-confirm-btn:disabled{background:#ccc;cursor:not-allowed}
+  .pin-loc-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
+  .deliver-to-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px dashed var(--accent);border-radius:14px;padding:14px;cursor:pointer;transition:all 0.2s}
+  .deliver-to-card:hover{background:var(--accent-bg)}
+  .deliver-to-card.filled{border-style:solid;border-color:var(--border2)}
+  .deliver-to-icon{width:38px;height:38px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .deliver-to-icon.confirmed{background:rgba(76,175,80,0.14);color:var(--green)}
+  .deliver-to-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .deliver-to-text strong{font-size:13.5px;font-weight:700}
+  .deliver-to-text span{font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .deliver-to-dist{color:var(--green)!important;font-weight:600!important;-webkit-line-clamp:1!important}
+  .deliver-to-change{flex-shrink:0;background:none;border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;cursor:pointer}
+  .deliver-to-change:hover{background:var(--accent-bg)}
+  .deliver-to-card.selected{border-style:solid;border-color:var(--accent);background:var(--accent-bg)}
+  .deliver-to-check{color:var(--green);font-size:20px;flex-shrink:0}
+  .loc-manual-fields{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+  .loc-field-label{font-size:12.5px;font-weight:700;color:#555;margin-bottom:-4px}
+  body.dark .loc-modal .loc-field-label{color:#bbb}
+  #loc-status-box{display:flex;align-items:center;gap:8px;font-size:13px;color:#a33;margin-top:10px;padding:10px 14px;background:#fdecea;border-radius:10px;border-left:3px solid #e53935}
+  body.dark #loc-status-box{background:#3a1414;color:#f5b0ac}
+  .loc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
+  .loc-modal-overlay.open{display:flex}
+  .loc-modal{background:#fff;color:#1a1a1a;width:100%;max-width:460px;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+  body.dark .loc-modal{background:#141414;color:#f0f0f0}
+  .loc-modal h3{font-size:16px;font-weight:800;margin-bottom:2px}
+  .loc-modal .loc-sub{font-size:12px;color:#777;margin-bottom:12px}
+  body.dark .loc-modal .loc-sub{color:#999}
+  #loc-status-box{display:flex;align-items:center;gap:8px;font-size:13px;color:#444;margin-bottom:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border-left:3px solid #f5a623}
+  body.dark #loc-status-box{background:#332b0f;color:#e8dcb0}
+  #loc-status-box.confirmed{background:#e8f5e9;border-left-color:#4caf50}
+  body.dark #loc-status-box.confirmed{background:#0f2e18;color:#a6e6b8}
+  #loc-map{height:300px;border-radius:14px;overflow:hidden;border:1px solid #eee}
+  body.dark #loc-map{border-color:#2a2a2a}
+  #loc-coords-box{margin-top:10px;padding:10px 14px;background:#f8f8f5;border-radius:10px;font-size:12.5px;color:#333}
+  body.dark #loc-coords-box{background:#1c1c1c;color:#ddd}
+  .loc-btn-row{display:flex;gap:10px;margin-top:12px}
+  .loc-btn-row button{flex:1;padding:12px;border-radius:10px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
+  #loc-locate-btn{background:#eef2ff;color:#4f46e5}
+  #loc-confirm-btn{background:#ff5722;color:#fff}
+  #loc-cancel-btn{background:none;border:1px solid #ddd;color:#777;width:100%;margin-top:10px;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+  body.dark #loc-cancel-btn{border-color:#333;color:#999}
   .payment-opt{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;transition:border-color 0.2s}
   .payment-opt.selected{border-color:var(--accent)}
   .payment-opt input[type=radio]{accent-color:var(--accent)}
@@ -526,7 +518,15 @@
     <div class="checkout-section">
       <h3><i class="ti ti-map-pin"></i>Delivery address</h3>
       <div id="saved-addresses-list"></div>
-      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-plus"></i> Add new address</button>
+      <div class="deliver-to-card" id="add-new-address-card" onclick="openLocationPicker()">
+        <div class="deliver-to-icon"><i class="ti ti-plus"></i></div>
+        <div class="deliver-to-text">
+          <strong>Add new address</strong>
+          <span>Pin a new delivery location on the map · 7km zone</span>
+        </div>
+        <i class="ti ti-chevron-right" style="color:var(--text3)"></i>
+      </div>
+      <textarea class="address-input" id="delivery-address" style="display:none"></textarea>
     </div>
     <div class="checkout-section" id="checkout-items-section">
       <h3><i class="ti ti-receipt"></i>Order summary</h3>
@@ -549,28 +549,24 @@
   </div>
 </div>
 
-<!-- LOCATION PICKER MODAL (fullscreen, fixed center pin — Swiggy style) -->
+<!-- LOCATION PICKER MODAL -->
 <div class="loc-modal-overlay" id="loc-modal-overlay">
-  <div class="loc-modal" id="loc-modal">
+  <div class="loc-modal">
+    <h3>📍 Set delivery location</h3>
+    <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
+    <div id="loc-status-box" style="display:none"></div>
     <div id="loc-map"></div>
-    <div class="loc-center-pin"><i class="ti ti-map-pin-filled"></i><div class="loc-pin-shadow"></div></div>
-
-    <div class="loc-topbar">
-      <div class="loc-topbar-row">
-        <button type="button" class="loc-back-btn" onclick="closeLocationPicker()"><i class="ti ti-arrow-left"></i></button>
-        <div class="loc-search-box"><i class="ti ti-search"></i><input id="loc-search-input" placeholder="Search for area, street name…" oninput="onLocSearchInput()" autocomplete="off"></div>
-      </div>
-      <div class="loc-current-row" onclick="locLocateMe()"><i class="ti ti-current-location"></i><span>Use my current location</span></div>
-      <div class="loc-suggestions" id="loc-suggestions" style="display:none"></div>
+    <div class="loc-manual-fields">
+      <label class="loc-field-label" for="loc-address-input">Address <span style="color:#e53935">*</span></label>
+      <textarea id="loc-address-input" class="address-input" placeholder="House/Flat no., Street, Area, City…" style="min-height:56px"></textarea>
+      <label class="loc-field-label" for="loc-landmark-input">Nearby shop / landmark <span style="color:#e53935">*</span></label>
+      <input type="text" id="loc-landmark-input" class="address-input" placeholder="e.g. Near Raj Kirana Store" style="min-height:auto;padding:10px 14px">
     </div>
-
-    <div class="loc-sheet">
-      <div class="loc-sheet-addr"><i class="ti ti-map-pin"></i><div class="loc-sheet-addr-text" id="loc-sheet-addr-text">Move the map to set your delivery spot…</div></div>
-      <div class="loc-sheet-sub" id="loc-sheet-sub">We deliver within 7 km of our kitchen</div>
-      <textarea id="loc-address-input" class="loc-field-input" style="min-height:60px;resize:vertical" placeholder="House/Flat no., Street, Area, City… (required)"></textarea>
-      <input id="loc-landmark-input" class="loc-field-input" placeholder="Nearby shop / landmark (required)">
-      <button type="button" id="loc-confirm-btn" onclick="saveNewAddress()" style="margin-top:12px"><i class="ti ti-device-floppy"></i> Save Address</button>
+    <div class="loc-btn-row">
+      <button type="button" id="loc-locate-btn" onclick="locLocateMe()">🎯 Use my location</button>
+      <button type="button" id="loc-confirm-btn" onclick="saveDeliveryAddress()">💾 Save delivery address</button>
     </div>
+    <button type="button" id="loc-cancel-btn" onclick="closeLocationPicker()">Cancel</button>
   </div>
 </div>
 
@@ -612,6 +608,9 @@ function distanceKm(lat1, lng1, lat2, lng2){
 
 function openLocationPicker(){
   document.getElementById('loc-modal-overlay').classList.add('open');
+  document.getElementById('loc-address-input').value = '';
+  document.getElementById('loc-landmark-input').value = '';
+  hideLocStatus();
   if(!locMap){
     locMap = L.map('loc-map', { attributionControl: false }).setView([locDefaultLat, locDefaultLng], 13);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -644,21 +643,24 @@ function closeLocationPicker(){
 }
 
 function updateLocCoords(lat, lng){
-  const dist = distanceKm(STORE_LAT, STORE_LNG, lat, lng);
-  const sub = document.getElementById('loc-sheet-sub');
-  if(dist > MAX_DELIVERY_RADIUS_KM){
-    document.getElementById('loc-sheet-addr-text').textContent = 'Outside our delivery zone';
-    sub.textContent = `🚫 ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km`;
-    sub.classList.add('warn'); sub.classList.remove('ok');
-  } else {
-    document.getElementById('loc-sheet-addr-text').textContent = 'Pin set — fill in your address below';
-    sub.textContent = `✅ Within delivery zone (${dist.toFixed(1)} km from kitchen)`;
-    sub.classList.add('ok'); sub.classList.remove('warn');
-  }
+  // Just remember the pinned point — no auto-filled address/landmark text.
+  pickedLat = lat; pickedLng = lng;
+  hideLocStatus();
 }
 
+function setLocStatus(text){
+  const el = document.getElementById('loc-status-box');
+  el.textContent = text;
+  el.style.display = 'flex';
+}
+function hideLocStatus(){
+  document.getElementById('loc-status-box').style.display = 'none';
+}
+
+let pickedLat = locDefaultLat, pickedLng = locDefaultLng;
+
 function locLocateMe(){
-  if(!navigator.geolocation) return;
+  if(!navigator.geolocation){ setLocStatus('⚠️ Geolocation not supported, set pin manually'); return; }
   navigator.geolocation.getCurrentPosition(
     function(pos){
       const { latitude, longitude } = pos.coords;
@@ -666,92 +668,85 @@ function locLocateMe(){
       locMarker.setLatLng([latitude, longitude]);
       updateLocCoords(latitude, longitude);
     },
-    function(){ /* denied — user can drag the pin manually */ },
+    function(){ setLocStatus('⚠️ Location access denied — please drag pin manually'); },
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
-// ─── SAVED DELIVERY ADDRESSES (persisted per logged-in customer) ──
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ─── SAVED DELIVERY ADDRESSES (persisted per customer in Supabase) ──
 let savedAddresses = [];
 let selectedAddressId = null;
 
-function addressStorageKey(){
-  return 'tildabite_addresses_' + (loggedInUser?.id || 'guest');
-}
-function loadSavedAddresses(){
-  try{
-    savedAddresses = JSON.parse(localStorage.getItem(addressStorageKey())) || [];
-  }catch(e){ savedAddresses = []; }
-  selectedAddressId = savedAddresses.length ? savedAddresses[0].id : null;
-}
-function persistSavedAddresses(){
-  try{ localStorage.setItem(addressStorageKey(), JSON.stringify(savedAddresses)); }catch(e){}
+async function loadSavedAddresses(){
+  if(!isLoggedIn || !loggedInUser.id) { savedAddresses = []; renderSavedAddresses(); return; }
+  const { data, error } = await sb.from('customer_addresses')
+    .select('*').eq('customer_id', loggedInUser.id).order('created_at', { ascending: true });
+  if(error){ console.error('loadSavedAddresses failed:', error); return; }
+  savedAddresses = data || [];
+  if(!selectedAddressId && savedAddresses.length) selectedAddressId = savedAddresses[savedAddresses.length - 1].id;
+  renderSavedAddresses();
 }
 
 function renderSavedAddresses(){
-  const el = document.getElementById('saved-addresses-list');
-  if(!el) return;
-  if(!savedAddresses.length){
-    el.innerHTML = '<div class="saved-addr-empty">No saved address yet — add one to continue</div>';
-    deliveryLat = null; deliveryLng = null;
-    return;
-  }
-  el.innerHTML = savedAddresses.map(a => `
-    <div class="saved-addr-card${a.id===selectedAddressId?' selected':''}" onclick="selectSavedAddress('${a.id}')">
-      <i class="ti ti-map-pin-filled saved-addr-pin"></i>
-      <div class="saved-addr-info">
-        <div class="saved-addr-text">${a.address}</div>
-        <div class="saved-addr-landmark">Near ${a.landmark}</div>
+  const list = document.getElementById('saved-addresses-list');
+  if(!list) return;
+  if(!savedAddresses.length){ list.innerHTML = ''; return; }
+  list.innerHTML = savedAddresses.map(a => `
+    <div class="deliver-to-card ${a.id === selectedAddressId ? 'selected filled' : ''}" style="margin-bottom:10px" onclick="selectSavedAddress('${a.id}')">
+      <div class="deliver-to-icon ${a.id === selectedAddressId ? 'confirmed' : ''}"><i class="ti ${a.id === selectedAddressId ? 'ti-map-pin-check' : 'ti-map-pin'}"></i></div>
+      <div class="deliver-to-text">
+        <strong>${escapeHtml(a.address)}</strong>
+        <span>Near ${escapeHtml(a.landmark)}</span>
       </div>
-      <i class="ti ti-circle-check saved-addr-check"></i>
-      <button type="button" class="saved-addr-remove" onclick="event.stopPropagation();removeSavedAddress('${a.id}')" title="Remove"><i class="ti ti-trash"></i></button>
-    </div>`).join('');
-  const sel = savedAddresses.find(a=>a.id===selectedAddressId) || savedAddresses[0];
-  selectedAddressId = sel.id;
-  deliveryLat = sel.lat; deliveryLng = sel.lng;
+      ${a.id === selectedAddressId ? '<i class="ti ti-circle-check deliver-to-check"></i>' : ''}
+    </div>
+  `).join('');
 }
 
 function selectSavedAddress(id){
+  const a = savedAddresses.find(x => x.id === id);
+  if(!a) return;
   selectedAddressId = id;
-  const sel = savedAddresses.find(a=>a.id===id);
-  if(sel){ deliveryLat = sel.lat; deliveryLng = sel.lng; }
+  deliveryLat = a.lat; deliveryLng = a.lng;
+  document.getElementById('delivery-address').value = `${a.address} — Near ${a.landmark}`;
   renderSavedAddresses();
 }
 
-function removeSavedAddress(id){
-  savedAddresses = savedAddresses.filter(a=>a.id!==id);
-  persistSavedAddresses();
-  if(selectedAddressId===id) selectedAddressId = savedAddresses.length ? savedAddresses[0].id : null;
-  renderSavedAddresses();
-}
-
-function saveNewAddress(){
-  const p = locMarker.getLatLng();
-  const dist = distanceKm(STORE_LAT, STORE_LNG, p.lat, p.lng);
+async function saveDeliveryAddress(){
+  const dist = distanceKm(STORE_LAT, STORE_LNG, pickedLat, pickedLng);
   if(dist > MAX_DELIVERY_RADIUS_KM){
+    setLocStatus(`🚫 Sorry, this spot is ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km of our kitchen`);
     showToast(`❌ Out of delivery range (${dist.toFixed(1)} km away, max ${MAX_DELIVERY_RADIUS_KM} km)`);
     return;
   }
-  const address = document.getElementById('loc-address-input').value.trim();
-  const landmark = document.getElementById('loc-landmark-input').value.trim();
-  if(!address){ showToast('Please enter your address'); return; }
-  if(!landmark){ showToast('Please enter a nearby shop/landmark'); return; }
-
-  const newAddr = { id: 'addr_'+Date.now(), address, landmark, lat: p.lat, lng: p.lng };
-  savedAddresses.push(newAddr);
-  persistSavedAddresses();
-  selectedAddressId = newAddr.id;
-  renderSavedAddresses();
-
-  document.getElementById('loc-address-input').value = '';
-  document.getElementById('loc-landmark-input').value = '';
-  showToast('📍 Address saved!');
+  const addressText = document.getElementById('loc-address-input').value.trim();
+  const landmarkText = document.getElementById('loc-landmark-input').value.trim();
+  if(!addressText || !landmarkText){
+    setLocStatus('⚠️ Please fill both address and nearby landmark before saving');
+    return;
+  }
+  if(!isLoggedIn || !loggedInUser.id){
+    showToast('Please sign in to save an address 🔑');
+    return;
+  }
+  const { data, error } = await sb.from('customer_addresses').insert({
+    customer_id: loggedInUser.id, address: addressText, landmark: landmarkText,
+    lat: pickedLat, lng: pickedLng
+  }).select().maybeSingle();
+  if(error){ showToast('❌ Could not save address, please try again'); console.error(error); return; }
+  savedAddresses.push(data);
+  selectSavedAddress(data.id);
+  showToast('✅ Delivery address saved!');
   closeLocationPicker();
 }
 
 // ─── SUPABASE CONFIG ─────────────────────────────────────────
-const SUPABASE_URL = 'https://lqluavkrzejnvzbyuodi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_G4fz5rLx0K1pY1dSzn5Crw_0wZmUMWJ';
+const SUPABASE_URL = 'https://yfkixtbkgjxitclfzgtn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_gLy90IEp2lLei209R0ftWw_pPuDp2x4';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── MENU (live from Supabase) ───────────────────────────────
@@ -926,7 +921,6 @@ function restoreSession(){
   document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
   document.getElementById('profile-name-display').textContent = saved.name;
   document.getElementById('profile-email-display').textContent = saved.email;
-  loadSavedAddresses();
   subscribeToMyOrders();
   renderOrders();
 }
@@ -1124,7 +1118,6 @@ function goCheckout(){
 }
 
 function renderCheckout(){
-  renderSavedAddresses();
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   const itemsEl = document.getElementById('checkout-items-list');
   itemsEl.innerHTML = keys.map(k=>{
@@ -1136,6 +1129,7 @@ function renderCheckout(){
   document.getElementById('co-subtotal').textContent='₹'+sub;
   document.getElementById('co-tax').textContent='₹'+tax;
   document.getElementById('co-total').textContent='₹'+(sub+tax);
+  loadSavedAddresses();
 }
 
 function selectPay(el){
@@ -1147,10 +1141,8 @@ function selectPay(el){
 async function placeOrder(){
   if(!isEffectivelyOpen()){ showToast("We're closed right now — opening at "+to12h(STORE_SETTINGS.opening_time)); showClosedOverlay(); return; }
   if(!requireAuth('placeOrder')) return;
-  if(!savedAddresses.length || !selectedAddressId){ showToast('📍 Please add a delivery address'); openLocationPicker(); return; }
-  const selAddr = savedAddresses.find(a=>a.id===selectedAddressId);
-  const address = `${selAddr.address} (Near ${selAddr.landmark})`;
-  if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please add a delivery address'); openLocationPicker(); return; }
+  const address = document.getElementById('delivery-address').value.trim();
+  if(!address || deliveryLat === null || deliveryLng === null){ showToast('📍 Please select or add a delivery address'); openLocationPicker(); return; }
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   if(!keys.length){ showToast('Your cart is empty'); return; }
   // Only send item id + qty — server looks up the real price itself,
@@ -1431,7 +1423,6 @@ async function handleAuth(){
   sessionToken = acc.token;
   loggedInUser = { id: acc.id, name: acc.name, email: acc.email, phone: acc.phone };
   saveSession(acc);
-  loadSavedAddresses();
   document.getElementById('auth-nav-label').textContent = acc.name.split(' ')[0];
   document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
   document.getElementById('profile-name-display').textContent = acc.name;
@@ -1471,7 +1462,6 @@ function signOut(){
   sessionToken = null;
   loggedInUser = { name: 'Guest', email: '' };
   clearSession();
-  savedAddresses = []; selectedAddressId = null;
   if(myOrdersChannel){ sb.removeChannel(myOrdersChannel); myOrdersChannel = null; }
   cart = {};
   updateCartUI();
