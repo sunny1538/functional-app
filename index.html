@@ -191,39 +191,54 @@
   .address-input:focus{border-color:var(--accent)}
   .pin-loc-btn{width:100%;margin-top:10px;background:var(--accent-bg);border:1.5px dashed var(--accent);color:var(--accent);padding:11px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
   .pin-loc-btn:hover{background:var(--accent-bg)}
-  .pin-loc-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
-  .deliver-to-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px dashed var(--accent);border-radius:14px;padding:14px;cursor:pointer;transition:all 0.2s}
-  .deliver-to-card:hover{background:var(--accent-bg)}
-  .deliver-to-card.filled{border-style:solid;border-color:var(--border2)}
-  .deliver-to-icon{width:38px;height:38px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-  .deliver-to-icon.confirmed{background:rgba(76,175,80,0.14);color:var(--green)}
-  .deliver-to-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .deliver-to-text strong{font-size:13.5px;font-weight:700}
-  .deliver-to-text span{font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .deliver-to-dist{color:var(--green)!important;font-weight:600!important;-webkit-line-clamp:1!important}
-  .deliver-to-change{flex-shrink:0;background:none;border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;cursor:pointer}
-  .deliver-to-change:hover{background:var(--accent-bg)}
-  .loc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
-  .loc-modal-overlay.open{display:flex}
-  .loc-modal{background:#fff;color:#1a1a1a;width:100%;max-width:460px;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
-  body.dark .loc-modal{background:#141414;color:#f0f0f0}
-  .loc-modal h3{font-size:16px;font-weight:800;margin-bottom:2px}
-  .loc-modal .loc-sub{font-size:12px;color:#777;margin-bottom:12px}
-  body.dark .loc-modal .loc-sub{color:#999}
-  #loc-status-box{display:flex;align-items:center;gap:8px;font-size:13px;color:#444;margin-bottom:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border-left:3px solid #f5a623}
-  body.dark #loc-status-box{background:#332b0f;color:#e8dcb0}
-  #loc-status-box.confirmed{background:#e8f5e9;border-left-color:#4caf50}
-  body.dark #loc-status-box.confirmed{background:#0f2e18;color:#a6e6b8}
-  #loc-map{height:300px;border-radius:14px;overflow:hidden;border:1px solid #eee}
-  body.dark #loc-map{border-color:#2a2a2a}
-  #loc-coords-box{margin-top:10px;padding:10px 14px;background:#f8f8f5;border-radius:10px;font-size:12.5px;color:#333}
-  body.dark #loc-coords-box{background:#1c1c1c;color:#ddd}
-  .loc-btn-row{display:flex;gap:10px;margin-top:12px}
-  .loc-btn-row button{flex:1;padding:12px;border-radius:10px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
-  #loc-locate-btn{background:#eef2ff;color:#4f46e5}
-  #loc-confirm-btn{background:#ff5722;color:#fff}
-  #loc-cancel-btn{background:none;border:1px solid #ddd;color:#777;width:100%;margin-top:10px;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
-  body.dark #loc-cancel-btn{border-color:#333;color:#999}
+  .saved-addr-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1.5px solid var(--border2);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;transition:all 0.2s}
+  .saved-addr-card:hover{border-color:var(--accent)}
+  .saved-addr-card.selected{border-color:var(--accent);background:var(--accent-bg)}
+  .saved-addr-card i.saved-addr-pin{color:var(--accent);font-size:20px;margin-top:2px;flex-shrink:0}
+  .saved-addr-info{flex:1;min-width:0}
+  .saved-addr-text{font-size:14px;font-weight:600;line-height:1.4;word-break:break-word}
+  .saved-addr-landmark{font-size:12px;color:var(--text2);margin-top:3px}
+  .saved-addr-check{font-size:20px;color:var(--accent);flex-shrink:0;opacity:0}
+  .saved-addr-card.selected .saved-addr-check{opacity:1}
+  .saved-addr-remove{flex-shrink:0;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px}
+  .saved-addr-remove:hover{color:var(--red)}
+  .saved-addr-empty{text-align:center;padding:24px 12px;color:var(--text3);font-size:13px}
+  .loc-field-input{width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;outline:none;font-family:inherit;margin-top:10px}
+  .loc-field-input:focus{border-color:var(--accent)}
+  body.dark .loc-field-input{background:#1e1e1e;color:#f0f0f0;border-color:#333}
+  .loc-modal-overlay{position:fixed;inset:0;background:#eee;z-index:400;display:none}
+  .loc-modal-overlay.open{display:block}
+  .loc-modal{position:relative;width:100%;height:100%;overflow:hidden}
+  #loc-map{position:absolute;inset:0;z-index:1}
+  .loc-topbar{position:absolute;top:0;left:0;right:0;z-index:50;padding:14px 14px 0;display:flex;flex-direction:column;gap:8px}
+  .loc-topbar-row{display:flex;align-items:center;gap:10px}
+  .loc-back-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:#333;flex-shrink:0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25)}
+  .loc-search-box{flex:1;background:#fff;border-radius:12px;display:flex;align-items:center;padding:0 12px;box-shadow:0 2px 10px rgba(0,0,0,0.25)}
+  .loc-search-box i{color:#999;font-size:16px}
+  .loc-search-box input{flex:1;border:none;outline:none;padding:11px 8px;font-size:14px;background:transparent;color:#1a1a1a}
+  .loc-current-row{background:#fff;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#4f46e5;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+  .loc-current-row i{font-size:17px}
+  .loc-suggestions{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.2);max-height:240px;overflow-y:auto}
+  .loc-suggestion-item{padding:11px 14px;font-size:13px;color:#333;border-bottom:1px solid #f0f0f0;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+  .loc-suggestion-item:last-child{border-bottom:none}
+  .loc-suggestion-item:hover{background:#f7f7f7}
+  .loc-suggestion-item i{color:#999;margin-top:2px;font-size:14px;flex-shrink:0}
+  .loc-center-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;transition:transform 0.15s ease-out}
+  .loc-center-pin i{font-size:38px;color:#ff5722;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.35))}
+  .loc-center-pin .loc-pin-shadow{width:10px;height:5px;background:rgba(0,0,0,0.35);border-radius:50%;margin-top:-3px;filter:blur(1px);transition:opacity 0.15s}
+  .loc-modal.dragging .loc-center-pin{transform:translate(-50%,-118%)}
+  .loc-modal.dragging .loc-center-pin .loc-pin-shadow{opacity:0.3}
+  .loc-sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#fff;border-radius:20px 20px 0 0;padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 24px rgba(0,0,0,0.2)}
+  body.dark .loc-sheet{background:#141414;color:#f0f0f0}
+  .loc-sheet-addr{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px}
+  .loc-sheet-addr i{color:#ff5722;font-size:18px;margin-top:1px;flex-shrink:0}
+  .loc-sheet-addr-text{flex:1;font-size:14px;font-weight:700;line-height:1.4}
+  .loc-sheet-sub{font-size:12px;color:#888;margin:2px 0 14px 28px;font-weight:600}
+  body.dark .loc-sheet-sub{color:#999}
+  .loc-sheet-sub.warn{color:#dc2626}
+  .loc-sheet-sub.ok{color:#16a34a}
+  #loc-confirm-btn{width:100%;background:#ff5722;color:#fff;border:none;padding:14px;border-radius:12px;font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  #loc-confirm-btn:disabled{background:#ccc;cursor:not-allowed}
   .payment-opt{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;transition:border-color 0.2s}
   .payment-opt.selected{border-color:var(--accent)}
   .payment-opt input[type=radio]{accent-color:var(--accent)}
@@ -510,24 +525,8 @@
     </div>
     <div class="checkout-section">
       <h3><i class="ti ti-map-pin"></i>Delivery address</h3>
-      <div class="deliver-to-card" id="deliver-to-empty" onclick="openLocationPicker()">
-        <div class="deliver-to-icon"><i class="ti ti-current-location"></i></div>
-        <div class="deliver-to-text">
-          <strong>Pin your delivery location</strong>
-          <span>Tap to set your exact spot on the map · 7km delivery zone</span>
-        </div>
-        <i class="ti ti-chevron-right" style="color:var(--text3)"></i>
-      </div>
-      <div class="deliver-to-card filled" id="deliver-to-filled" style="display:none" onclick="openLocationPicker()">
-        <div class="deliver-to-icon confirmed"><i class="ti ti-map-pin-check"></i></div>
-        <div class="deliver-to-text">
-          <strong>Delivering to</strong>
-          <span id="delivery-address-display"></span>
-          <span class="deliver-to-dist" id="delivery-dist-display"></span>
-        </div>
-        <button type="button" class="deliver-to-change" onclick="event.stopPropagation();openLocationPicker()">Change</button>
-      </div>
-      <textarea class="address-input" id="delivery-address" style="display:none"></textarea>
+      <div id="saved-addresses-list"></div>
+      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-plus"></i> Add new address</button>
     </div>
     <div class="checkout-section" id="checkout-items-section">
       <h3><i class="ti ti-receipt"></i>Order summary</h3>
@@ -550,19 +549,28 @@
   </div>
 </div>
 
-<!-- LOCATION PICKER MODAL -->
+<!-- LOCATION PICKER MODAL (fullscreen, fixed center pin — Swiggy style) -->
 <div class="loc-modal-overlay" id="loc-modal-overlay">
-  <div class="loc-modal">
-    <h3>📍 Set delivery location</h3>
-    <p class="loc-sub">Drag the pin or tap the map to set your exact spot · We deliver within a 7 km circle (shown in orange) around our kitchen</p>
-    <div id="loc-status-box">📍 Fetching your location...</div>
+  <div class="loc-modal" id="loc-modal">
     <div id="loc-map"></div>
-    <div id="loc-coords-box"><strong style="display:block;font-size:13px;margin-bottom:3px">Selected point</strong><span id="loc-coords-text">Lat: --, Lng: --</span><div id="loc-address-preview" style="margin-top:6px;font-size:12.5px;color:var(--text2);font-weight:600"></div></div>
-    <div class="loc-btn-row">
-      <button type="button" id="loc-locate-btn" onclick="locLocateMe()">🎯 Use my location</button>
-      <button type="button" id="loc-confirm-btn" onclick="confirmLocationPick()">✅ Confirm this spot</button>
+    <div class="loc-center-pin"><i class="ti ti-map-pin-filled"></i><div class="loc-pin-shadow"></div></div>
+
+    <div class="loc-topbar">
+      <div class="loc-topbar-row">
+        <button type="button" class="loc-back-btn" onclick="closeLocationPicker()"><i class="ti ti-arrow-left"></i></button>
+        <div class="loc-search-box"><i class="ti ti-search"></i><input id="loc-search-input" placeholder="Search for area, street name…" oninput="onLocSearchInput()" autocomplete="off"></div>
+      </div>
+      <div class="loc-current-row" onclick="locLocateMe()"><i class="ti ti-current-location"></i><span>Use my current location</span></div>
+      <div class="loc-suggestions" id="loc-suggestions" style="display:none"></div>
     </div>
-    <button type="button" id="loc-cancel-btn" onclick="closeLocationPicker()">Cancel</button>
+
+    <div class="loc-sheet">
+      <div class="loc-sheet-addr"><i class="ti ti-map-pin"></i><div class="loc-sheet-addr-text" id="loc-sheet-addr-text">Move the map to set your delivery spot…</div></div>
+      <div class="loc-sheet-sub" id="loc-sheet-sub">We deliver within 7 km of our kitchen</div>
+      <textarea id="loc-address-input" class="loc-field-input" style="min-height:60px;resize:vertical" placeholder="House/Flat no., Street, Area, City… (required)"></textarea>
+      <input id="loc-landmark-input" class="loc-field-input" placeholder="Nearby shop / landmark (required)">
+      <button type="button" id="loc-confirm-btn" onclick="saveNewAddress()" style="margin-top:12px"><i class="ti ti-device-floppy"></i> Save Address</button>
+    </div>
   </div>
 </div>
 
@@ -619,12 +627,10 @@ function openLocationPicker(){
     locMarker.on('dragend', function(){
       const p = locMarker.getLatLng();
       updateLocCoords(p.lat, p.lng);
-      setLocStatus('📍 Pin adjusted — drag again or confirm below');
     });
     locMap.on('click', function(e){
       locMarker.setLatLng(e.latlng);
       updateLocCoords(e.latlng.lat, e.latlng.lng);
-      setLocStatus('📍 Pin adjusted — drag again or confirm below');
     });
     setTimeout(()=>locMap.invalidateSize(), 200);
     locLocateMe();
@@ -638,142 +644,114 @@ function closeLocationPicker(){
 }
 
 function updateLocCoords(lat, lng){
-  document.getElementById('loc-coords-text').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
-  scheduleReverseGeocode(lat, lng);
-}
-
-function setLocStatus(text, confirmed){
-  const el = document.getElementById('loc-status-box');
-  el.textContent = text;
-  el.classList.toggle('confirmed', !!confirmed);
-}
-
-// ─── Reverse geocoding: auto-fill address / nearest landmark ──
-let geocodeTimer = null;
-let lastGeocodedAddress = '';
-
-function scheduleReverseGeocode(lat, lng){
-  clearTimeout(geocodeTimer);
-  document.getElementById('loc-address-preview').textContent = '🔎 Finding nearest landmark…';
-  geocodeTimer = setTimeout(() => reverseGeocode(lat, lng), 700); // debounce while dragging
-}
-
-// Find the nearest NAMED real-world place (shop, temple, school, hospital, etc.)
-// within a small radius by querying OpenStreetMap's Overpass API. This gives a
-// genuine "50-100m away" landmark instead of just the village/pincode.
-async function findNearestLandmark(lat, lng){
-  const radii = [100, 250, 500, 1000]; // metres — expands only if nothing found nearby
-  const query = (r) => `[out:json][timeout:10];(
-    node(around:${r},${lat},${lng})["name"]["amenity"];
-    node(around:${r},${lat},${lng})["name"]["shop"];
-    node(around:${r},${lat},${lng})["name"]["tourism"];
-    node(around:${r},${lat},${lng})["name"]["leisure"];
-    node(around:${r},${lat},${lng})["name"]["office"];
-    node(around:${r},${lat},${lng})["name"]["healthcare"];
-    node(around:${r},${lat},${lng})["name"]["religion"];
-    way(around:${r},${lat},${lng})["name"]["amenity"];
-    way(around:${r},${lat},${lng})["name"]["building"];
-  );out center 20;`;
-
-  for(const r of radii){
-    try{
-      const res = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST', body: 'data=' + encodeURIComponent(query(r))
-      });
-      if(!res.ok) continue;
-      const data = await res.json();
-      if(!data.elements || !data.elements.length) continue;
-      let best = null, bestDist = Infinity;
-      for(const el of data.elements){
-        const elat = el.lat ?? el.center?.lat;
-        const elng = el.lon ?? el.center?.lon;
-        if(elat == null || elng == null || !el.tags?.name) continue;
-        const d = distanceKm(lat, lng, elat, elng) * 1000; // metres
-        if(d < bestDist){ bestDist = d; best = el; }
-      }
-      if(best) return { name: best.tags.name, distanceM: Math.round(bestDist) };
-    } catch(e){ console.error('Overpass landmark lookup failed:', e); }
-  }
-  return null;
-}
-
-async function fetchNominatimAddress(lat, lng){
-  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-    headers: { 'Accept-Language': 'en' }
-  });
-  const data = await res.json();
-  if(!data || data.error) return null;
-  return data.address || {};
-}
-
-async function reverseGeocode(lat, lng){
-  try{
-    const [landmark, a] = await Promise.all([
-      findNearestLandmark(lat, lng),
-      fetchNominatimAddress(lat, lng)
-    ]);
-    const addr = a || {};
-    const road = addr.road || addr.pedestrian || '';
-    const area = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || '';
-    const city = addr.city || addr.town || addr.state_district || '';
-    const pin = addr.postcode || '';
-
-    const parts = [];
-    if(landmark) parts.push(`Near ${landmark.name} (~${landmark.distanceM}m)`);
-    [road, area, city, pin].forEach(v => { if(v && !parts.includes(v)) parts.push(v); });
-
-    const shortAddress = parts.join(', ');
-    if(!shortAddress){ document.getElementById('loc-address-preview').textContent = ''; return; }
-
-    lastGeocodedAddress = shortAddress;
-    document.getElementById('loc-address-preview').textContent = '📌 ' + shortAddress;
-    // Auto-fill the checkout delivery address field
-    document.getElementById('delivery-address').value = shortAddress;
-  } catch(e){
-    console.error('Reverse geocode failed:', e);
-    document.getElementById('loc-address-preview').textContent = '';
+  const dist = distanceKm(STORE_LAT, STORE_LNG, lat, lng);
+  const sub = document.getElementById('loc-sheet-sub');
+  if(dist > MAX_DELIVERY_RADIUS_KM){
+    document.getElementById('loc-sheet-addr-text').textContent = 'Outside our delivery zone';
+    sub.textContent = `🚫 ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km`;
+    sub.classList.add('warn'); sub.classList.remove('ok');
+  } else {
+    document.getElementById('loc-sheet-addr-text').textContent = 'Pin set — fill in your address below';
+    sub.textContent = `✅ Within delivery zone (${dist.toFixed(1)} km from kitchen)`;
+    sub.classList.add('ok'); sub.classList.remove('warn');
   }
 }
 
 function locLocateMe(){
-  if(!navigator.geolocation){ setLocStatus('⚠️ Geolocation not supported, set pin manually'); return; }
-  setLocStatus('📍 Fetching your exact location...');
+  if(!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     function(pos){
       const { latitude, longitude } = pos.coords;
       locMap.setView([latitude, longitude], 15);
       locMarker.setLatLng([latitude, longitude]);
       updateLocCoords(latitude, longitude);
-      setLocStatus('✅ Location found — address auto-filled, drag pin to fine-tune if needed');
     },
-    function(){ setLocStatus('⚠️ Location access denied — please drag pin manually'); },
+    function(){ /* denied — user can drag the pin manually */ },
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
-function confirmLocationPick(){
+// ─── SAVED DELIVERY ADDRESSES (persisted per logged-in customer) ──
+let savedAddresses = [];
+let selectedAddressId = null;
+
+function addressStorageKey(){
+  return 'tildabite_addresses_' + (loggedInUser?.id || 'guest');
+}
+function loadSavedAddresses(){
+  try{
+    savedAddresses = JSON.parse(localStorage.getItem(addressStorageKey())) || [];
+  }catch(e){ savedAddresses = []; }
+  selectedAddressId = savedAddresses.length ? savedAddresses[0].id : null;
+}
+function persistSavedAddresses(){
+  try{ localStorage.setItem(addressStorageKey(), JSON.stringify(savedAddresses)); }catch(e){}
+}
+
+function renderSavedAddresses(){
+  const el = document.getElementById('saved-addresses-list');
+  if(!el) return;
+  if(!savedAddresses.length){
+    el.innerHTML = '<div class="saved-addr-empty">No saved address yet — add one to continue</div>';
+    deliveryLat = null; deliveryLng = null;
+    return;
+  }
+  el.innerHTML = savedAddresses.map(a => `
+    <div class="saved-addr-card${a.id===selectedAddressId?' selected':''}" onclick="selectSavedAddress('${a.id}')">
+      <i class="ti ti-map-pin-filled saved-addr-pin"></i>
+      <div class="saved-addr-info">
+        <div class="saved-addr-text">${a.address}</div>
+        <div class="saved-addr-landmark">Near ${a.landmark}</div>
+      </div>
+      <i class="ti ti-circle-check saved-addr-check"></i>
+      <button type="button" class="saved-addr-remove" onclick="event.stopPropagation();removeSavedAddress('${a.id}')" title="Remove"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+  const sel = savedAddresses.find(a=>a.id===selectedAddressId) || savedAddresses[0];
+  selectedAddressId = sel.id;
+  deliveryLat = sel.lat; deliveryLng = sel.lng;
+}
+
+function selectSavedAddress(id){
+  selectedAddressId = id;
+  const sel = savedAddresses.find(a=>a.id===id);
+  if(sel){ deliveryLat = sel.lat; deliveryLng = sel.lng; }
+  renderSavedAddresses();
+}
+
+function removeSavedAddress(id){
+  savedAddresses = savedAddresses.filter(a=>a.id!==id);
+  persistSavedAddresses();
+  if(selectedAddressId===id) selectedAddressId = savedAddresses.length ? savedAddresses[0].id : null;
+  renderSavedAddresses();
+}
+
+function saveNewAddress(){
   const p = locMarker.getLatLng();
   const dist = distanceKm(STORE_LAT, STORE_LNG, p.lat, p.lng);
   if(dist > MAX_DELIVERY_RADIUS_KM){
-    setLocStatus(`🚫 Sorry, this spot is ${dist.toFixed(1)} km away — we deliver only within ${MAX_DELIVERY_RADIUS_KM} km of our kitchen`, false);
     showToast(`❌ Out of delivery range (${dist.toFixed(1)} km away, max ${MAX_DELIVERY_RADIUS_KM} km)`);
     return;
   }
-  deliveryLat = p.lat; deliveryLng = p.lng;
-  setLocStatus(`✅ Delivery location confirmed: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)} (${dist.toFixed(1)} km away)`, true);
-  const finalAddress = lastGeocodedAddress || `Lat ${p.lat.toFixed(5)}, Lng ${p.lng.toFixed(5)}`;
-  document.getElementById('delivery-address').value = finalAddress;
-  document.getElementById('delivery-address-display').textContent = finalAddress;
-  document.getElementById('delivery-dist-display').textContent = `${dist.toFixed(1)} km from kitchen`;
-  document.getElementById('deliver-to-empty').style.display = 'none';
-  document.getElementById('deliver-to-filled').style.display = 'flex';
-  showToast('📍 Delivery location & address pinned!');
+  const address = document.getElementById('loc-address-input').value.trim();
+  const landmark = document.getElementById('loc-landmark-input').value.trim();
+  if(!address){ showToast('Please enter your address'); return; }
+  if(!landmark){ showToast('Please enter a nearby shop/landmark'); return; }
+
+  const newAddr = { id: 'addr_'+Date.now(), address, landmark, lat: p.lat, lng: p.lng };
+  savedAddresses.push(newAddr);
+  persistSavedAddresses();
+  selectedAddressId = newAddr.id;
+  renderSavedAddresses();
+
+  document.getElementById('loc-address-input').value = '';
+  document.getElementById('loc-landmark-input').value = '';
+  showToast('📍 Address saved!');
   closeLocationPicker();
 }
 
 // ─── SUPABASE CONFIG ─────────────────────────────────────────
-const SUPABASE_URL = 'https://yfkixtbkgjxitclfzgtn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_gLy90IEp2lLei209R0ftWw_pPuDp2x4';
+const SUPABASE_URL = 'https://lqluavkrzejnvzbyuodi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_G4fz5rLx0K1pY1dSzn5Crw_0wZmUMWJ';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── MENU (live from Supabase) ───────────────────────────────
@@ -948,6 +926,7 @@ function restoreSession(){
   document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
   document.getElementById('profile-name-display').textContent = saved.name;
   document.getElementById('profile-email-display').textContent = saved.email;
+  loadSavedAddresses();
   subscribeToMyOrders();
   renderOrders();
 }
@@ -1145,6 +1124,7 @@ function goCheckout(){
 }
 
 function renderCheckout(){
+  renderSavedAddresses();
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   const itemsEl = document.getElementById('checkout-items-list');
   itemsEl.innerHTML = keys.map(k=>{
@@ -1167,9 +1147,10 @@ function selectPay(el){
 async function placeOrder(){
   if(!isEffectivelyOpen()){ showToast("We're closed right now — opening at "+to12h(STORE_SETTINGS.opening_time)); showClosedOverlay(); return; }
   if(!requireAuth('placeOrder')) return;
-  const address = document.getElementById('delivery-address').value.trim();
-  if(!address){ showToast('Please enter a delivery address'); return; }
-  if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please pin your exact location on the map — we only deliver within 7 km'); openLocationPicker(); return; }
+  if(!savedAddresses.length || !selectedAddressId){ showToast('📍 Please add a delivery address'); openLocationPicker(); return; }
+  const selAddr = savedAddresses.find(a=>a.id===selectedAddressId);
+  const address = `${selAddr.address} (Near ${selAddr.landmark})`;
+  if(deliveryLat === null || deliveryLng === null){ showToast('📍 Please add a delivery address'); openLocationPicker(); return; }
   const keys = Object.keys(cart).filter(k=>cart[k]>0);
   if(!keys.length){ showToast('Your cart is empty'); return; }
   // Only send item id + qty — server looks up the real price itself,
@@ -1227,12 +1208,6 @@ async function placeOrder(){
       window._lastOtp = otp;
       window._lastOrderId = order.id;
       cart={};updateCartUI();
-      deliveryLat = null; deliveryLng = null;
-      document.getElementById('deliver-to-filled').style.display = 'none';
-      document.getElementById('deliver-to-empty').style.display = 'flex';
-      document.getElementById('delivery-address').value = '';
-      document.getElementById('delivery-address-display').textContent = '';
-      document.getElementById('delivery-dist-display').textContent = '';
       if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
       await loadSharedMenu(); // stock/sold already decremented in DB via trigger
       applyFilters(document.getElementById('search-input').value.toLowerCase());
@@ -1456,6 +1431,7 @@ async function handleAuth(){
   sessionToken = acc.token;
   loggedInUser = { id: acc.id, name: acc.name, email: acc.email, phone: acc.phone };
   saveSession(acc);
+  loadSavedAddresses();
   document.getElementById('auth-nav-label').textContent = acc.name.split(' ')[0];
   document.getElementById('auth-nav-btn').querySelector('i').className = 'ti ti-user-circle';
   document.getElementById('profile-name-display').textContent = acc.name;
@@ -1495,6 +1471,7 @@ function signOut(){
   sessionToken = null;
   loggedInUser = { name: 'Guest', email: '' };
   clearSession();
+  savedAddresses = []; selectedAddressId = null;
   if(myOrdersChannel){ sb.removeChannel(myOrdersChannel); myOrdersChannel = null; }
   cart = {};
   updateCartUI();
