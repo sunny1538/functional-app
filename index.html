@@ -192,6 +192,17 @@
   .pin-loc-btn{width:100%;margin-top:10px;background:var(--accent-bg);border:1.5px dashed var(--accent);color:var(--accent);padding:11px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
   .pin-loc-btn:hover{background:var(--accent-bg)}
   .pin-loc-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
+  .deliver-to-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px dashed var(--accent);border-radius:14px;padding:14px;cursor:pointer;transition:all 0.2s}
+  .deliver-to-card:hover{background:var(--accent-bg)}
+  .deliver-to-card.filled{border-style:solid;border-color:var(--border2)}
+  .deliver-to-icon{width:38px;height:38px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .deliver-to-icon.confirmed{background:rgba(76,175,80,0.14);color:var(--green)}
+  .deliver-to-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .deliver-to-text strong{font-size:13.5px;font-weight:700}
+  .deliver-to-text span{font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .deliver-to-dist{color:var(--green)!important;font-weight:600!important;-webkit-line-clamp:1!important}
+  .deliver-to-change{flex-shrink:0;background:none;border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;cursor:pointer}
+  .deliver-to-change:hover{background:var(--accent-bg)}
   .loc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px}
   .loc-modal-overlay.open{display:flex}
   .loc-modal{background:#fff;color:#1a1a1a;width:100%;max-width:460px;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
@@ -499,9 +510,24 @@
     </div>
     <div class="checkout-section">
       <h3><i class="ti ti-map-pin"></i>Delivery address</h3>
-      <textarea class="address-input" id="delivery-address" placeholder="House/Flat no., Street, Area, City…"></textarea>
-      <button type="button" class="pin-loc-btn" onclick="openLocationPicker()"><i class="ti ti-current-location"></i> Pin exact location on map (required · 7km delivery zone)</button>
-      <div class="pin-loc-status" id="pin-loc-status" style="display:none"><i class="ti ti-map-pin-check"></i><span id="pin-loc-status-text"></span></div>
+      <div class="deliver-to-card" id="deliver-to-empty" onclick="openLocationPicker()">
+        <div class="deliver-to-icon"><i class="ti ti-current-location"></i></div>
+        <div class="deliver-to-text">
+          <strong>Pin your delivery location</strong>
+          <span>Tap to set your exact spot on the map · 7km delivery zone</span>
+        </div>
+        <i class="ti ti-chevron-right" style="color:var(--text3)"></i>
+      </div>
+      <div class="deliver-to-card filled" id="deliver-to-filled" style="display:none" onclick="openLocationPicker()">
+        <div class="deliver-to-icon confirmed"><i class="ti ti-map-pin-check"></i></div>
+        <div class="deliver-to-text">
+          <strong>Delivering to</strong>
+          <span id="delivery-address-display"></span>
+          <span class="deliver-to-dist" id="delivery-dist-display"></span>
+        </div>
+        <button type="button" class="deliver-to-change" onclick="event.stopPropagation();openLocationPicker()">Change</button>
+      </div>
+      <textarea class="address-input" id="delivery-address" style="display:none"></textarea>
     </div>
     <div class="checkout-section" id="checkout-items-section">
       <h3><i class="ti ti-receipt"></i>Order summary</h3>
@@ -735,10 +761,12 @@ function confirmLocationPick(){
   }
   deliveryLat = p.lat; deliveryLng = p.lng;
   setLocStatus(`✅ Delivery location confirmed: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)} (${dist.toFixed(1)} km away)`, true);
-  const statusRow = document.getElementById('pin-loc-status');
-  statusRow.style.display = 'flex';
-  document.getElementById('pin-loc-status-text').textContent = `Location pinned · ${dist.toFixed(1)} km from kitchen`;
-  if(lastGeocodedAddress) document.getElementById('delivery-address').value = lastGeocodedAddress;
+  const finalAddress = lastGeocodedAddress || `Lat ${p.lat.toFixed(5)}, Lng ${p.lng.toFixed(5)}`;
+  document.getElementById('delivery-address').value = finalAddress;
+  document.getElementById('delivery-address-display').textContent = finalAddress;
+  document.getElementById('delivery-dist-display').textContent = `${dist.toFixed(1)} km from kitchen`;
+  document.getElementById('deliver-to-empty').style.display = 'none';
+  document.getElementById('deliver-to-filled').style.display = 'flex';
   showToast('📍 Delivery location & address pinned!');
   closeLocationPicker();
 }
@@ -1200,7 +1228,11 @@ async function placeOrder(){
       window._lastOrderId = order.id;
       cart={};updateCartUI();
       deliveryLat = null; deliveryLng = null;
-      document.getElementById('pin-loc-status').style.display = 'none';
+      document.getElementById('deliver-to-filled').style.display = 'none';
+      document.getElementById('deliver-to-empty').style.display = 'flex';
+      document.getElementById('delivery-address').value = '';
+      document.getElementById('delivery-address-display').textContent = '';
+      document.getElementById('delivery-dist-display').textContent = '';
       if(payBtn){ payBtn.disabled = false; payBtn.textContent = 'Place Order'; }
       await loadSharedMenu(); // stock/sold already decremented in DB via trigger
       applyFilters(document.getElementById('search-input').value.toLowerCase());
